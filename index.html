@@ -26,23 +26,13 @@
   <script>
     const container = document.getElementById("dosbox");
 
-    // v7 uses DosPlayer
-    DosPlayer.create(container, {
-      wdosboxUrl: "https://js-dos.com/v7/build/wdosbox.js",
-      style: "default",     // sidebar visible
-      kiosk: false,         // don’t hide sidebar
-      noSideBar: false
-    }).then((player) => {
-      const ci = player;
-      ci.fs.extract("basic.zip").then(() => {
-        ci.run([
-          "-c", "mount c .",
-          "-c", "c:",
-          "-c", "cd gwbasic",
-          "-c", "gwbasic"
-        ]);
-      });
-    });
+    Dos(container, {
+      url: "basic.zip",            // your GW-BASIC bundle
+      style: "default",           // ensure sidebar is visible
+      kiosk: false,               // keep UI visible (not in full kiosk mode)
+      noSideBar: false,           // do not hide sidebar
+      thinSidebar: false          // use full-sized sidebar
+    }).run("basic.zip");
   </script>
 </body>
 </html>
