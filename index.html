@@ -8,7 +8,7 @@
   body, html { margin:0; height:100%; background:#000; display:flex; flex-direction:column; }
   #dosbox { flex:1; width:100%; height:100%; display:block; }
   #keyboard { background:#222; padding:10px; display:grid; grid-template-columns: repeat(14, 1fr); gap:4px; }
-  .key { background:#444; color:#fff; border:none; border-radius:4px; padding:8px; font-size:14px; cursor:pointer; }
+  .key { background:#444; color:#fff; border:none; border-radius:4px; padding:8px; font-size:14px; cursor:pointer; user-select:none; }
   .key:active, .key.active { background:#888; }
   .wide { grid-column: span 2; }
   .space { grid-column: span 5; }
@@ -19,99 +19,102 @@
 <div id="keyboard"></div>
 
 <script src="jsdos/js-dos.js"></script>
-<script type="module">
+<script>
 const canvas = document.getElementById("dosbox");
 
 Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" })
-.ready((fs, main) => {
+.ready((fs, main, ci) => {
     fs.extract("basic.zip").then(() => {
-        main(["-c", "mount c .", "-c", "c:", "-c", "cd gwbasic", "-c", "gwbasic"])
-        .then((ci) => {
+        main(["-c","mount c .","-c","c:","-c","cd gwbasic","-c","gwbasic"]);
 
-            // 1️⃣ Setup layers for key handling
-            const layers = new Layers(ci.getParentDiv());
-            const disposeKeyboard = keyboard(layers, ci);
+        // Keyboard layout
+        const layout = [
+          ["Esc","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","-","=","Backspace"],
+          ["Tab","1","2","3","4","5","6","7","8","9","0","-","=","Enter"],
+          ["Caps","Q","W","E","R","T","Y","U","I","O","P","[","]","\\",""],
+          ["Shift","A","S","D","F","G","H","J","K","L",";","'","","Shift",""],
+          ["Z","X","C","V","B","N","M",",",".","/","","","","",""],
+          ["Ctrl","Alt","Space","Alt","Ctrl","","","","","","","","",""]
+        ];
 
-            // 2️⃣ Build your custom styled keyboard
-            const layout = [
-              ["Esc","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","-","=","Backspace"],
-              ["Tab","1","2","3","4","5","6","7","8","9","0","-","=","Enter"],
-              ["Caps","Q","W","E","R","T","Y","U","I","O","P","[","]","\\",""],
-              ["Shift","A","S","D","F","G","H","J","K","L",";","'","","Shift",""],
-              ["Z","X","C","V","B","N","M",",",".","/","","","","",""],
-              ["Ctrl","Alt","Space","Alt","Ctrl","","","","","","","","",""]
-            ];
+        // DOS scancodes for keys
+        const scancodes = {
+          "A":0x1E,"B":0x30,"C":0x2E,"D":0x20,"E":0x12,"F":0x21,"G":0x22,"H":0x23,"I":0x17,"J":0x24,
+          "K":0x25,"L":0x26,"M":0x32,"N":0x31,"O":0x18,"P":0x19,"Q":0x10,"R":0x13,"S":0x1F,"T":0x14,
+          "U":0x16,"V":0x2F,"W":0x11,"X":0x2D,"Y":0x15,"Z":0x2C,
+          "1":0x02,"2":0x03,"3":0x04,"4":0x05,"5":0x06,"6":0x07,"7":0x08,"8":0x09,"9":0x0A,"0":0x0B,
+          "-":0x0C,"=":0x0D,"[":0x1A,"]":0x1B,"\\":0x2B,";":0x27,"'":0x28,",":0x33,".":0x34,"/":0x35,
+          "Enter":0x1C,"Backspace":0x0E,"Tab":0x0F,"Esc":0x01,"Space":0x39,
+          "Shift":0x2A,"Caps":0x3A,"Ctrl":0x1D,"Alt":0x38
+        };
 
-            const kb = document.getElementById("keyboard");
+        // Shifted symbols
+        const shiftSymbols = {
+          "1":"!","2":"@","3":"#","4":"$","5":"%","6":"^","7":"&","8":"*","9":"(","0":")",
+          "-":"_","=":"+","[":"{","]":"}","\\":"|",";":":","'":'"',",":"<",".":">","/":"?"
+        };
 
-            // Map keys to DOS scancodes
-            const scancodeMap = {
-              "A":0x1E,"B":0x30,"C":0x2E,"D":0x20,"E":0x12,"F":0x21,"G":0x22,"H":0x23,"I":0x17,"J":0x24,
-              "K":0x25,"L":0x26,"M":0x32,"N":0x31,"O":0x18,"P":0x19,"Q":0x10,"R":0x13,"S":0x1F,"T":0x14,
-              "U":0x16,"V":0x2F,"W":0x11,"X":0x2D,"Y":0x15,"Z":0x2C,
-              "1":0x02,"2":0x03,"3":0x04,"4":0x05,"5":0x06,"6":0x07,"7":0x08,"8":0x09,"9":0x0A,"0":0x0B,
-              "-":0x0C,"=":0x0D,"[":0x1A,"]":0x1B,"\\":0x2B,";":0x27,"'":0x28,",":0x33,".":0x34,"/":0x35,
-              "Enter":0x1C,"Backspace":0x0E,"Tab":0x0F,"Esc":0x01,"Space":0x39,
-              "Shift":0x2A,"Caps":0x3A,"Ctrl":0x1D,"Alt":0x38
-            };
+        let shiftActive = false;
+        let capsActive = false;
 
-            let shiftActive = false;
-            let capsActive = false;
+        const kb = document.getElementById("keyboard");
 
-            layout.forEach(row => {
-              row.forEach(k => {
-                if(k === "") { kb.appendChild(document.createElement("div")); return; }
-                const btn = document.createElement("button");
-                btn.className = "key";
-                btn.textContent = k;
-                if(k==="Backspace"||k==="Enter") btn.classList.add("wide");
-                if(k==="Space") btn.classList.add("space");
+        layout.forEach(row => {
+          row.forEach(k => {
+            if(k==="") { kb.appendChild(document.createElement("div")); return; }
+            const btn = document.createElement("button");
+            btn.className = "key";
+            btn.textContent = k;
+            if(k==="Backspace"||k==="Enter") btn.classList.add("wide");
+            if(k==="Space") btn.classList.add("space");
 
-                btn.addEventListener("click", () => {
-                    let code = scancodeMap[k];
-                    if(code === undefined) return;
+            btn.addEventListener("click", () => {
+                if(k==="Shift") {
+                    shiftActive = !shiftActive;
+                    btn.classList.toggle("active", shiftActive);
+                    return;
+                }
+                if(k==="Caps") {
+                    capsActive = !capsActive;
+                    btn.classList.toggle("active", capsActive);
+                    return;
+                }
 
-                    // Handle Shift / Caps toggle
-                    if(k === "Shift") {
-                        shiftActive = !shiftActive;
-                        btn.classList.toggle("active", shiftActive);
-                        return;
-                    }
-                    if(k === "Caps") {
-                        capsActive = !capsActive;
-                        btn.classList.toggle("active", capsActive);
-                        return;
-                    }
+                let code = scancodes[k];
+                if(code===undefined) return;
 
-                    // Determine if we need Shift for letters
-                    let shiftNeeded = false;
-                    if(/[A-Z]/i.test(k)) {
-                        shiftNeeded = (shiftActive && !capsActive) || (!shiftActive && capsActive);
-                    }
+                let useShift = false;
 
-                    if(shiftNeeded) ci.keyDown(scancodeMap["Shift"]);
-                    ci.keyDown(code);
-                    ci.keyUp(code);
-                    if(shiftNeeded) ci.keyUp(scancodeMap["Shift"]);
+                // Letters: check Shift/Caps
+                if(/[A-Z]/i.test(k)) {
+                    useShift = (shiftActive && !capsActive) || (!shiftActive && capsActive);
+                } else if(shiftActive && shiftSymbols[k]) {
+                    // Shifted symbols
+                    k = shiftSymbols[k];
+                    useShift = true;
+                    code = scancodes[k] || code;
+                }
 
-                    // Auto-reset single-press Shift
-                    if(shiftActive && !/[A-Z]/i.test(k)) {
-                        shiftActive = false;
-                        document.querySelectorAll(".key").forEach(b => {
-                            if(b.textContent === "Shift") b.classList.remove("active");
-                        });
-                    }
-                });
+                if(useShift) ci.keyDown(scancodes["Shift"]);
+                ci.keyDown(code);
+                ci.keyUp(code);
+                if(useShift) ci.keyUp(scancodes["Shift"]);
 
-                kb.appendChild(btn);
-              });
+                // Reset single-press Shift
+                if(shiftActive && !/[A-Z]/i.test(k)) {
+                    shiftActive = false;
+                    document.querySelectorAll(".key").forEach(b => {
+                        if(b.textContent==="Shift") b.classList.remove("active");
+                    });
+                }
             });
 
+            kb.appendChild(btn);
+          });
         });
+
     });
 });
 </script>
 </body>
 </html>
-
-
