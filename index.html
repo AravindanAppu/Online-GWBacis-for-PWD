@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <title>GW-BASIC in Browser (v7)</title>
-  <!-- Load js-dos v7 -->
-  <script src="https://js-dos.com/v7/build/js-dos.js"></script>
-  <link rel="stylesheet" href="https://js-dos.com/v7/build/js-dos.css" />
+  <!-- Load js-dos v7 UMD build -->
+  <script src="https://cdn.jsdelivr.net/npm/@js-dos/js-dos@7.4.2/dist/js-dos.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@js-dos/js-dos@7.4.2/dist/js-dos.css" />
   <style>
     body, html {
       margin: 0;
@@ -27,11 +27,11 @@
     const container = document.getElementById("dosbox");
 
     Dos(container, {
-      url: "basic.zip",            // your GW-BASIC bundle
-      style: "default",           // ensure sidebar is visible
-      kiosk: false,               // keep UI visible (not in full kiosk mode)
-      noSideBar: false,           // do not hide sidebar
-      thinSidebar: false          // use full-sized sidebar
+      style: "default",
+      kiosk: false,
+      noSideBar: false,
+      thinSidebar: false,
+      url: "basic.zip"   // your GW-BASIC package
     }).run("basic.zip");
   </script>
 </body>
