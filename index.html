@@ -36,31 +36,19 @@ startBtn.addEventListener("click", () => {
         setStatus("Extracting basic.zip...");
         fs.extract("basic.zip").then(() => {
 
-            // Check if gwbasic folder exists
-            fs.list("/").then(files => {
-                if (!files.includes("gwbasic")) {
-                    setStatus("Error: gwbasic folder missing in basic.zip!");
-                    return;
-                }
-
-                setStatus("Launching GW-BASIC...");
-                main([
-                    "-startmapper",
-                    "-conf", "dosbox.conf",
-                    "-c", "mount c .",
-                    "-c", "c:",
-                    "-c", "cd gwbasic",
-                    "-c", "gwbasic"
-                ]).then((ci) => {
-                    setStatus("GW-BASIC ready. Use your keyboard!");
-                    canvas.focus();
-                }).catch(err => {
-                    setStatus("Error starting GW-BASIC: " + err);
-                    console.error(err);
-                });
-
+            setStatus("Launching GW-BASIC...");
+            main([
+                "-startmapper",
+                "-conf", "dosbox.conf",
+                "-c", "mount c .",
+                "-c", "c:",
+                "-c", "cd gwbasic",
+                "-c", "gwbasic"
+            ]).then((ci) => {
+                setStatus("GW-BASIC ready. Use your keyboard!");
+                canvas.focus();
             }).catch(err => {
-                setStatus("Error reading extracted files: " + err);
+                setStatus("Error starting GW-BASIC: " + err);
                 console.error(err);
             });
 
