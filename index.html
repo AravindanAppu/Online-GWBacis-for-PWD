@@ -1,183 +1,29 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>js-dos v8 local starter & diagnostics</title>
+  <meta charset="utf-8">
+  <title>GW-BASIC Local (js-dos v6.22)</title>
   <link rel="stylesheet" href="jsdos/js-dos.css">
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#111;color:#eee;margin:0;padding:12px;}
-    pre{background:#000;color:#9f9;padding: padding:12px;border-radius:6px;white-space:pre-wrap;}
-    #dosbox{width:100%;height:60vh;background:#000;border:1px solid #222;margin:10px 0;}
-    button{padding:8px 12px;margin-right:8px;}
-    .ok{color:#0f0} .bad{color:#f66}
+    body, html { margin:0; height:100%; background:#000; color:#0f0; }
+    #dosbox { width:100%; height:100%; }
   </style>
 </head>
 <body>
-  <h2>js-dos local starter & diagnostics</h2>
-  <p>Serving from: <code>/gwbasic/</code>. Files expected:</p>
-  <ul>
-    <li><code>index.html</code> (this file)</li>
-    <li><code>basic.zip</code> (your GW-BASIC zip)</li>
-    <li><code>jsdos/</code> folder with <code>js-dos.js</code>, <code>js-dos.css</code>, <code>wdosbox.js</code>, <code>dos.wasm</code>, etc.</li>
-  </ul>
-
-  <div>
-    <button id="runBtn">Run / Diagnose</button>
-    <button id="startBtn" disabled>Start GW-BASIC</button>
-  </div>
-
   <div id="dosbox"></div>
-
-  <h3>Diagnostics output</h3>
-  <pre id="out">(press Run / Diagnose)</pre>
-
   <script src="jsdos/js-dos.js"></script>
   <script>
-    const outEl = document.getElementById('out');
-    function log(...xs){
-      console.log(...xs);
-      outEl.textContent += xs.join(' ') + '\\n';
-    }
-    function clearLog(){ outEl.textContent = ''; }
-
-    async function fetchPreview(path){
-      try{
-        const r = await fetch(path, {method:'GET'});
-        const txt = await r.text();
-        return { ok: r.ok, status: r.status, head: txt.slice(0,450) };
-      }catch(e){
-        return { ok:false, error: e.toString() };
-      }
-    }
-
-    document.getElementById('runBtn').addEventListener('click', async () => {
-      clearLog();
-      log('--- Diagnostics start ---');
-      log('Window globals check:');
-      log(' typeof window.Dos =', typeof window.Dos);
-      log(' typeof window.DosFactory =', typeof window.DosFactory);
-      log(' typeof window.DosPlayer =', typeof window.DosPlayer);
-      log(' typeof window.DosModule =', typeof window.DosModule);
-
-      // Preview the js-dos file to see what you actually served
-      log('\\nFetching jsdos/js-dos.js preview (first 450 chars)...');
-      const preview = await fetchPreview('jsdos/js-dos.js');
-      if(preview.ok){
-        log('js-dos.js status:', preview.status);
-        log('--- preview ---\\n', preview.head.replace(/</g,'&lt;'));
-      } else {
-        log('Failed to fetch jsdos/js-dos.js ->', preview.error || ('status ' + preview.status));
-      }
-
-      // Check worker & wasm files existence
-      log('\\nProbing worker & wasm files:');
-      const workerPreview = await fetchPreview('jsdos/wdosbox.js');
-      log(' wdosbox.js ->', workerPreview.ok ? ('OK ' + workerPreview.status) : ('ERR ' + (workerPreview.error||workerPreview.status)));
-      const wasmPreview = await fetchPreview('jsdos/dos.wasm');
-      log(' dos.wasm ->', wasmPreview.ok ? ('OK ' + wasmPreview.status) : ('ERR ' + (wasmPreview.error||wasmPreview.status)));
-
-      // Try to auto-start using whichever API is present
-      log('\\nAttempting to instantiate js-dos using known entrypoints...');
-
-      // helper to attempt different ways
-      async function tryInit(){
-        const container = document.getElementById('dosbox');
-
-        // 1) DosFactory (v8 patterns)
-        if(typeof window.DosFactory === 'function'){
-          log('Found DosFactory -> attempting DosFactory(container, {...})...');
-          try{
-            const dos = await DosFactory(container, { url: 'basic.zip' });
-            log('DosFactory: instance created. Keys on object:', Object.keys(dos).slice(0,10).join(', '));
-            window._dosInstance = dos;
-            return { ok:true, method:'DosFactory', instance:dos };
-          }catch(e){
-            log('DosFactory instantiation failed:', e.toString());
-          }
-        } else {
-          log('DosFactory not available.');
-        }
-
-        // 2) Dos (v6/v7 styles) - could be function returning object or Promise
-        if(typeof window.Dos === 'function'){
-          log('Found Dos -> attempting Dos(container, {url:"basic.zip"}) ...');
-          try{
-            const maybe = Dos(container, { url: 'basic.zip' });
-            // if returns a Promise-like
-            if(maybe && typeof maybe.then === 'function'){
-              log('Dos returned a Promise; awaiting result...');
-              const result = await maybe;
-              log('Dos Promise resolved. result keys:', Object.keys(result||{}).slice(0,10).join(', '));
-              window._dosInstance = result;
-              return { ok:true, method:'Dos (Promise)', instance:result };
-            } else {
-              // direct object
-              log('Dos returned object:', Object.keys(maybe||{}).slice(0,10).join(', '));
-              window._dosInstance = maybe;
-              return { ok:true, method:'Dos (sync)', instance:maybe };
-            }
-          }catch(e){
-            log('Dos() call failed:', e.toString());
-          }
-        } else {
-          log('Dos function not present.');
-        }
-
-        // 3) DosPlayer or other names
-        if(typeof window.DosPlayer === 'function'){
-          log('Found DosPlayer -> trying DosPlayer.create...');
-          try{
-            const player = await DosPlayer.create(container, { url: 'basic.zip' });
-            log('DosPlayer.create OK, keys:', Object.keys(player||{}).slice(0,10).join(', '));
-            window._dosInstance = player;
-            return { ok:true, method:'DosPlayer', instance:player };
-          }catch(e){
-            log('DosPlayer.create failed:', e.toString());
-          }
-        } else {
-          log('DosPlayer not present.');
-        }
-
-        return { ok:false, error:'No known entrypoint succeeded' };
-      }
-
-      const res = await tryInit();
-      if(res.ok){
-        log('\\n✅ Started using method:', res.method);
-        document.getElementById('startBtn').disabled = false;
-      } else {
-        log('\\n❌ Could not start js-dos. Error:', res.error);
-        log('Please check: (1) jsdos/js-dos.js is correct v8 UMD build, (2) you are serving with http(s) (not file://), (3) wdosbox.js & dos.wasm exist in jsdos/');
-      }
-
-      log('--- Diagnostics end ---');
-    });
-
-    document.getElementById('startBtn').addEventListener('click', async ()=>{
-      if(!window._dosInstance){ log('No instance to start. Press Run / Diagnose first.'); return; }
-      const dos = window._dosInstance;
-      log('\\nStart pressed: checking instance for run/main methods...');
-      try{
-        if(typeof dos.main === 'function'){
-          log('Calling dos.main([...]) to launch GW-BASIC');
-          dos.main(["-c","mount c .","-c","c:","-c","cd gwbasic","-c","gwbasic"]);
-          return;
-        }
-        if(typeof dos.run === 'function'){
-          log('Calling dos.run("basic.zip")');
-          dos.run('basic.zip');
-          return;
-        }
-        // some versions expose ci or main via dos.ci or result of Dos(...) returned a function naming
-        if(dos && dos.ci && typeof dos.ci.main === 'function'){
-          log('Found dos.ci.main, calling that...');
-          dos.ci.main(["-c","mount c .","-c","c:","-c","cd gwbasic","-c","gwbasic"]);
-          return;
-        }
-        log('Cannot find a supported run/main method on the instance. Keys: ' + Object.keys(dos||{}).join(', '));
-      }catch(e){
-        log('Error while starting:', e.toString());
-      }
+    Dos(document.getElementById("dosbox"), {
+      wdosboxUrl: "jsdos/wdosbox.js"
+    }).ready((fs, main) => {
+      fs.extract("basic.zip").then(() => {
+        main([
+          "-c", "mount c .",
+          "-c", "c:",
+          "-c", "cd gwbasic",
+          "-c", "gwbasic"
+        ]);
+      });
     });
   </script>
 </body>
