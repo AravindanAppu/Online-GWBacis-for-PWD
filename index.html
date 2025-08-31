@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -12,6 +12,7 @@
     .key:active { background:#666; }
     .wide { grid-column: span 2; }
     .space { grid-column: span 5; }
+    .active { background: #888; }
   </style>
 </head>
 <body>
@@ -41,11 +42,20 @@
       ["Ctrl","Alt","Space","Alt","Ctrl","","","","","","","","",""]
     ];
 
-    // Key mapping for special keys
+    // DOS scancodes
     const keymap = {
-      "Backspace":8,"Tab":9,"Enter":13,"Esc":27,
-      "Shift":16,"Ctrl":17,"Alt":18,"Caps":20,"Space":32,
-      "ArrowLeft":37,"ArrowUp":38,"ArrowRight":39,"ArrowDown":40
+      "A":0x1E,"B":0x30,"C":0x2E,"D":0x20,"E":0x12,"F":0x21,"G":0x22,"H":0x23,"I":0x17,"J":0x24,
+      "K":0x25,"L":0x26,"M":0x32,"N":0x31,"O":0x18,"P":0x19,"Q":0x10,"R":0x13,"S":0x1F,"T":0x14,
+      "U":0x16,"V":0x2F,"W":0x11,"X":0x2D,"Y":0x15,"Z":0x2C,
+      "1":0x02,"2":0x03,"3":0x04,"4":0x05,"5":0x06,"6":0x07,"7":0x08,"8":0x09,"9":0x0A,"0":0x0B,
+      "-":0x0C,"=":0x0D,"[":0x1A,"]":0x1B,"\\":0x2B,";":0x27,"'":0x28,",":0x33,".":0x34,"/":0x35,
+      "Space":0x39,"Enter":0x1C,"Backspace":0x0E,"Tab":0x0F,"Esc":0x01,
+      "Shift":0x2A,"Ctrl":0x1D,"Alt":0x38,"Caps":0x3A
+    };
+
+    const shiftSymbols = {
+      "1":"!","2":"@","3":"#","4":"$","5":"%","6":"^","7":"&","8":"*","9":"(","0":")",
+      "-":"_","=":"+","[":"{","]":"}","\\":"|",";":":","'":'"',",":"<",".":">","/":"?"
     };
 
     let shiftActive = false;
@@ -54,66 +64,53 @@
     const kb = document.getElementById("keyboard");
     layout.forEach(row => {
       row.forEach(k => {
-        if(k === "") {
-          const empty = document.createElement("div");
-          kb.appendChild(empty);
-          return;
-        }
+        if(k === "") { kb.appendChild(document.createElement("div")); return; }
         const btn = document.createElement("button");
         btn.className = "key";
         btn.textContent = k;
-        if(k === "Backspace" || k === "Enter") btn.classList.add("wide");
-        if(k === "Space") btn.classList.add("space");
+        if(k==="Backspace"||k==="Enter") btn.classList.add("wide");
+        if(k==="Space") btn.classList.add("space");
 
-        btn.addEventListener("click", () => sendKey(k));
+        btn.addEventListener("click", () => sendKey(k, btn));
         kb.appendChild(btn);
       });
     });
 
-    function sendKey(k) {
+    function sendKey(k, btn) {
       if(!ci) return;
 
-      // Handle toggles
+      // Toggle shift
       if(k === "Shift") {
         shiftActive = !shiftActive;
+        btn.classList.toggle("active", shiftActive);
         return;
       }
+
+      // Toggle caps
       if(k === "Caps") {
         capsActive = !capsActive;
+        btn.classList.toggle("active", capsActive);
         return;
       }
 
-      let code = 0;
+      let sc = keymap[k.toUpperCase()];
+      if(!sc) return;
 
-      if(keymap[k]) {
-        code = keymap[k];
-      } else if(k.length === 1) {
-        let char = k;
-        if(/[A-Z]/.test(char)) {
-          if((shiftActive && !capsActive) || (!shiftActive && capsActive)) {
-            char = char.toUpperCase();
-          } else {
-            char = char.toLowerCase();
-          }
-        } else {
-          // Handle shift symbols
-          if(shiftActive) {
-            const shiftSymbols = {
-              "1":"!","2":"@","3":"#","4":"$","5":"%","6":"^","7":"&","8":"*","9":"(","0":")",
-              "-":"_","=":"+","[":"{","]":"}","\\":"|",";":":","'":'"',",":"<",".":">","/":"?"
-            };
-            if(shiftSymbols[char]) char = shiftSymbols[char];
-          }
-        }
-        code = char.charCodeAt(0);
+      // Determine if Shift should be pressed
+      let pressShift = false;
+      if(/[A-Z]/.test(k)) {
+        pressShift = (shiftActive && !capsActive) || (!shiftActive && capsActive);
+      } else if(shiftSymbols[k] && shiftActive) {
+        pressShift = true;
       }
 
-      if(code) {
-        ci.sendKeyEvent({type:"keydown", code});
-        ci.sendKeyEvent({type:"keyup", code});
-      }
+      if(pressShift) ci.sendKeyEvent({type:"keydown", code:0x2A}); // Shift down
+      ci.sendKeyEvent({type:"keydown", code:sc});
+      ci.sendKeyEvent({type:"keyup", code:sc});
+      if(pressShift) ci.sendKeyEvent({type:"keyup", code:0x2A}); // Shift up
 
-      if(shiftActive && k.length === 1) shiftActive = false; // reset shift after one key
+      if(shiftActive && !/[A-Z]/.test(k)) shiftActive = false; // auto-reset
+      document.querySelectorAll(".key.active").forEach(b => b.classList.remove("active"));
     }
   </script>
 </body>
