@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>GW-BASIC in Browser</title>
-  <!-- Load js-dos runtime (CDN-hosted) -->
+  <!-- Load js-dos runtime -->
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <style>
     body, html {
@@ -23,17 +23,18 @@
       background: #444;
       color: white;
       border: none;
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
       width: 100%;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <canvas id="dosbox" tabindex="0"></canvas>
-  <button id="kbdBtn">Keyboard</button>
+  <button id="kbdBtn">Show Keyboard</button>
 
-  <!-- Hidden input to raise Android soft keyboard -->
+  <!-- Hidden input to trigger Android keyboard -->
   <input id="hiddenInput" style="opacity:0;position:absolute;left:-9999px;" />
 
   <script>
@@ -41,9 +42,15 @@
     const hiddenInput = document.getElementById("hiddenInput");
     const kbdBtn = document.getElementById("kbdBtn");
 
-    Dos(canvas, { 
+    // Start js-dos
+    const dos = Dos(canvas, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
-      }).ready((fs, main) => {
+    });
+
+    dos.ready((fs, main) => {
+      // save reference for later input injection
+      canvas.dos = dos;
+
       fs.extract("basic.zip").then(() => {
         main([
           "-c", "mount c .",
@@ -54,23 +61,21 @@
       });
     });
 
-    // Tap canvas → raise Android soft keyboard
+    // Tapping canvas or button shows Android keyboard
     canvas.addEventListener("click", () => hiddenInput.focus());
     kbdBtn.addEventListener("click", () => hiddenInput.focus());
 
+    // Send typed characters into DOSBox
     hiddenInput.addEventListener("input", (e) => {
       const val = e.target.value;
       if (val.length > 0) {
         const ch = val[val.length - 1];
-        const evt = new KeyboardEvent("keypress", { key: ch });
-        canvas.dispatchEvent(evt);
+        if (canvas.dos) {
+          canvas.dos.keyboard(ch); // inject key properly
+        }
         e.target.value = "";
       }
     });
   </script>
 </body>
 </html>
-
-
-
-
