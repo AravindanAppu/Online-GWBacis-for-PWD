@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>GW-BASIC in Browser</title>
-  <!-- Load js-dos from CDN -->
+  <!-- Load js-dos runtime (CDN-hosted) -->
   <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
   <style>
     body, html {
@@ -41,32 +41,21 @@
     const hiddenInput = document.getElementById("hiddenInput");
     const kbdBtn = document.getElementById("kbdBtn");
 
-    // Start DOSBox with CDN-hosted runtime + mobile keyboard overlay
-    Dos(canvas, {
-      keyboard: true
-    }).ready((fs, main) => {
-      // Load gwbasic.zip from same folder as index.html
+    Dos(canvas, { keyboard: true }).ready((fs, main) => {
       fs.extract("basic.zip").then(() => {
         main([
           "-c", "mount c .",
           "-c", "c:",
-          "-c", "cd gwbasic"
+          "-c", "cd gwbasic",
           "-c", "gwbasic"
         ]);
       });
     });
 
-    // Canvas tap = raise soft keyboard
-    canvas.addEventListener("click", () => {
-      hiddenInput.focus();
-    });
+    // Tap canvas → raise Android soft keyboard
+    canvas.addEventListener("click", () => hiddenInput.focus());
+    kbdBtn.addEventListener("click", () => hiddenInput.focus());
 
-    // Keyboard button = force keyboard
-    kbdBtn.addEventListener("click", () => {
-      hiddenInput.focus();
-    });
-
-    // Relay typed chars to DOS
     hiddenInput.addEventListener("input", (e) => {
       const val = e.target.value;
       if (val.length > 0) {
@@ -79,4 +68,3 @@
   </script>
 </body>
 </html>
-
