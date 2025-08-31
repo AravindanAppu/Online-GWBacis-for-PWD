@@ -16,8 +16,6 @@
 </head>
 <body>
   <canvas id="dosbox"></canvas>
-
-  <!-- Virtual keyboard -->
   <div id="keyboard"></div>
 
   <script src="jsdos/js-dos.js"></script>
@@ -25,7 +23,6 @@
     let ci;
     const canvas = document.getElementById("dosbox");
 
-    // Start js-dos
     Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" })
       .ready((fs, main, control) => {
         ci = control;
@@ -34,26 +31,30 @@
         });
       });
 
-    // Define keyboard layout
+    // Keyboard layout
     const layout = [
       ["Esc","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","-","=","Backspace"],
-      ["Tab","Q","W","E","R","T","Y","U","I","O","P","[","]","Enter"],
-      ["Caps","A","S","D","F","G","H","J","K","L",";","'","\\",""],
-      ["Shift","Z","X","C","V","B","N","M",",",".","/","Shift","",""],
+      ["Tab","1","2","3","4","5","6","7","8","9","0","-","=","Enter"],
+      ["Caps","Q","W","E","R","T","Y","U","I","O","P","[","]","\\",""],
+      ["Shift","A","S","D","F","G","H","J","K","L",";","'","","Shift",""],
+      ["Z","X","C","V","B","N","M",",",".","/","","","","",""],
       ["Ctrl","Alt","Space","Alt","Ctrl","","","","","","","","",""]
     ];
 
+    // Key mapping for special keys
     const keymap = {
       "Backspace":8,"Tab":9,"Enter":13,"Esc":27,
       "Shift":16,"Ctrl":17,"Alt":18,"Caps":20,"Space":32,
       "ArrowLeft":37,"ArrowUp":38,"ArrowRight":39,"ArrowDown":40
     };
 
-    // Build keyboard DOM
+    let shiftActive = false;
+    let capsActive = false;
+
     const kb = document.getElementById("keyboard");
     layout.forEach(row => {
       row.forEach(k => {
-        if(k==="") {
+        if(k === "") {
           const empty = document.createElement("div");
           kb.appendChild(empty);
           return;
@@ -61,9 +62,9 @@
         const btn = document.createElement("button");
         btn.className = "key";
         btn.textContent = k;
-        if(k==="Backspace") btn.classList.add("wide");
-        if(k==="Enter") btn.classList.add("wide");
-        if(k==="Space") btn.classList.add("space");
+        if(k === "Backspace" || k === "Enter") btn.classList.add("wide");
+        if(k === "Space") btn.classList.add("space");
+
         btn.addEventListener("click", () => sendKey(k));
         kb.appendChild(btn);
       });
@@ -71,12 +72,48 @@
 
     function sendKey(k) {
       if(!ci) return;
-      if(k.length===1) {
-        ci.sendKeyPress(k.charCodeAt(0));
-      } else if(keymap[k]) {
-        ci.sendKeyEvent({type:"keydown", code:keymap[k]});
-        ci.sendKeyEvent({type:"keyup", code:keymap[k]});
+
+      // Handle toggles
+      if(k === "Shift") {
+        shiftActive = !shiftActive;
+        return;
       }
+      if(k === "Caps") {
+        capsActive = !capsActive;
+        return;
+      }
+
+      let code = 0;
+
+      if(keymap[k]) {
+        code = keymap[k];
+      } else if(k.length === 1) {
+        let char = k;
+        if(/[A-Z]/.test(char)) {
+          if((shiftActive && !capsActive) || (!shiftActive && capsActive)) {
+            char = char.toUpperCase();
+          } else {
+            char = char.toLowerCase();
+          }
+        } else {
+          // Handle shift symbols
+          if(shiftActive) {
+            const shiftSymbols = {
+              "1":"!","2":"@","3":"#","4":"$","5":"%","6":"^","7":"&","8":"*","9":"(","0":")",
+              "-":"_","=":"+","[":"{","]":"}","\\":"|",";":":","'":'"',",":"<",".":">","/":"?"
+            };
+            if(shiftSymbols[char]) char = shiftSymbols[char];
+          }
+        }
+        code = char.charCodeAt(0);
+      }
+
+      if(code) {
+        ci.sendKeyEvent({type:"keydown", code});
+        ci.sendKeyEvent({type:"keyup", code});
+      }
+
+      if(shiftActive && k.length === 1) shiftActive = false; // reset shift after one key
     }
   </script>
 </body>
