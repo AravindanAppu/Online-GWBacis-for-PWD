@@ -19,20 +19,27 @@
       background: black;
       outline: none;
     }
-    #kbdBtn {
+    #controls {
+      display: flex;
+    }
+    button {
+      flex: 1;
       background: #444;
       color: white;
       border: none;
       padding: 12px;
       font-size: 16px;
-      width: 100%;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
   <canvas id="dosbox" tabindex="0"></canvas>
-  <button id="kbdBtn">Show Keyboard</button>
+
+  <div id="controls">
+    <button id="kbdBtn">Android Keyboard</button>
+    <button id="dosKbdBtn">DOS Keyboard</button>
+  </div>
 
   <!-- Hidden input to trigger Android keyboard -->
   <input id="hiddenInput" style="opacity:0;position:absolute;left:-9999px;" />
@@ -41,6 +48,7 @@
     const canvas = document.getElementById("dosbox");
     const hiddenInput = document.getElementById("hiddenInput");
     const kbdBtn = document.getElementById("kbdBtn");
+    const dosKbdBtn = document.getElementById("dosKbdBtn");
 
     // Start js-dos
     const dos = Dos(canvas, {
@@ -62,55 +70,47 @@
       });
     });
 
-    // Show keyboard on tap
-    canvas.addEventListener("click", () => hiddenInput.focus());
+    // Show Android keyboard
     kbdBtn.addEventListener("click", () => hiddenInput.focus());
+    canvas.addEventListener("click", () => hiddenInput.focus());
 
-    // Handle normal characters and special keys
+    // Show DOS built-in keyboard
+    dosKbdBtn.addEventListener("click", () => {
+      if (ci) {
+        ci.keyboard(true); // toggle DOS virtual keyboard
+      }
+    });
+
+    // Handle characters + special keys for Android keyboard
     hiddenInput.addEventListener("keydown", (e) => {
       if (!ci) return;
 
+      let code;
       switch (e.key) {
-        case "Enter":
-          ci.sendKeyEvent({ type: "keydown", code: 13 });
-          ci.sendKeyEvent({ type: "keyup", code: 13 });
-          break;
-        case "Backspace":
-          ci.sendKeyEvent({ type: "keydown", code: 8 });
-          ci.sendKeyEvent({ type: "keyup", code: 8 });
-          break;
-        case "Tab":
-          ci.sendKeyEvent({ type: "keydown", code: 9 });
-          ci.sendKeyEvent({ type: "keyup", code: 9 });
-          break;
-        case "Escape":
-          ci.sendKeyEvent({ type: "keydown", code: 27 });
-          ci.sendKeyEvent({ type: "keyup", code: 27 });
-          break;
-        case "ArrowUp":
-          ci.sendKeyEvent({ type: "keydown", code: 38 });
-          ci.sendKeyEvent({ type: "keyup", code: 38 });
-          break;
-        case "ArrowDown":
-          ci.sendKeyEvent({ type: "keydown", code: 40 });
-          ci.sendKeyEvent({ type: "keyup", code: 40 });
-          break;
-        case "ArrowLeft":
-          ci.sendKeyEvent({ type: "keydown", code: 37 });
-          ci.sendKeyEvent({ type: "keyup", code: 37 });
-          break;
-        case "ArrowRight":
-          ci.sendKeyEvent({ type: "keydown", code: 39 });
-          ci.sendKeyEvent({ type: "keyup", code: 39 });
-          break;
+        case "Enter": code = 13; break;
+        case "Backspace": code = 8; break;
+        case "Tab": code = 9; break;
+        case "Escape": code = 27; break;
+        case "ArrowUp": code = 38; break;
+        case "ArrowDown": code = 40; break;
+        case "ArrowLeft": code = 37; break;
+        case "ArrowRight": code = 39; break;
         default:
-          // Handle normal printable characters
           if (e.key.length === 1) {
             ci.sendKeyPress(e.key.charCodeAt(0));
           }
+          return;
       }
 
-      e.preventDefault(); // prevent browser from hijacking keys
+      ci.sendKeyEvent({ type: "keydown", code });
+      ci.sendKeyEvent({ type: "keyup", code });
+
+      e.preventDefault();
+    });
+
+    // Keep Android keyboard open
+    hiddenInput.addEventListener("blur", () => {
+      setTimeout(() => hiddenInput.focus(), 10);
     });
   </script>
 </body>
