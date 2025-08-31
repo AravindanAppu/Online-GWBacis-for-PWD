@@ -41,7 +41,9 @@
     const hiddenInput = document.getElementById("hiddenInput");
     const kbdBtn = document.getElementById("kbdBtn");
 
-    Dos(canvas, { keyboard: true }).ready((fs, main) => {
+    Dos(canvas, { 
+      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+      keyboard: true }).ready((fs, main) => {
       fs.extract("basic.zip").then(() => {
         main([
           "-c", "mount c .",
@@ -68,5 +70,6 @@
   </script>
 </body>
 </html>
+
 
 
