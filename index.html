@@ -2,10 +2,11 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>GW-BASIC in Browser (v7)</title>
-  <!-- js-dos v7 player bundle (UMD build) -->
-  <script src="https://v7.js-dos.com/latest/js-dos.js"></script>
-  <link rel="stylesheet" href="https://v7.js-dos.com/latest/js-dos.css" />
+  <title>GW-BASIC in Browser (js-dos v7)</title>
+  <!-- Latest UMD build with global Dos function -->
+  <script src="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.js"></script>
+  <link rel="stylesheet" href="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.css" />
+
   <style>
     body, html {
       margin: 0;
@@ -24,15 +25,19 @@
   <div id="dosbox"></div>
 
   <script>
-    const container = document.getElementById("dosbox");
+    // Ensure WASM files are found correctly
+    emulators.pathPrefix = "https://js-dos.com/v7/build/releases/latest/js-dos/";
 
-    Dos(container, {
-      url: "basic.zip",
+    // Initialize js-dos
+    const player = Dos(document.getElementById("dosbox"), {
       style: "default",
       kiosk: false,
       noSideBar: false,
       thinSidebar: false
-    }).run("basic.zip");
+    });
+
+    // Run your bundle (GW-BASIC ZIP)
+    player.run("basic.zip");
   </script>
 </body>
 </html>
