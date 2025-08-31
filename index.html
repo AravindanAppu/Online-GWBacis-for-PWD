@@ -26,22 +26,21 @@
   <script>
     const container = document.getElementById("dosbox");
 
-    Dos(container, {
-      url: "basic.zip",         // your GW-BASIC zip
+    // v7 uses DosPlayer
+    DosPlayer.create(container, {
       wdosboxUrl: "https://js-dos.com/v7/build/wdosbox.js",
-      style: "default",         // ensures sidebar is shown
-      kiosk: false,             // keep sidebar enabled
-      noSideBar: false          // explicitly allow sidebar
-    }).then((ci) => {
-      ci.ready.then(() => {
-        ci.fs.extract("basic.zip").then(() => {
-          ci.run([
-            "-c", "mount c .",
-            "-c", "c:",
-            "-c", "cd gwbasic",
-            "-c", "gwbasic"
-          ]);
-        });
+      style: "default",     // sidebar visible
+      kiosk: false,         // don’t hide sidebar
+      noSideBar: false
+    }).then((player) => {
+      const ci = player;
+      ci.fs.extract("basic.zip").then(() => {
+        ci.run([
+          "-c", "mount c .",
+          "-c", "c:",
+          "-c", "cd gwbasic",
+          "-c", "gwbasic"
+        ]);
       });
     });
   </script>
