@@ -1,117 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>GW-BASIC with Virtual Keyboard</title>
-  <link rel="stylesheet" href="jsdos/js-dos.css">
-  <style>
-    body, html { margin:0; height:100%; background:#000; display:flex; flex-direction:column; }
-    #dosbox { flex:1; width:100%; height:100%; display:block; }
-    #keyboard { background:#222; padding:10px; display:grid; grid-template-columns: repeat(14, 1fr); gap:4px; }
-    .key { background:#444; color:#fff; border:none; border-radius:4px; padding:8px; font-size:14px; cursor:pointer; }
-    .key:active { background:#666; }
-    .wide { grid-column: span 2; }
-    .space { grid-column: span 5; }
-    .active { background: #888; }
-  </style>
+<meta charset="utf-8">
+<title>GW-BASIC with Virtual Keyboard</title>
+<link rel="stylesheet" href="jsdos/js-dos.css">
+<style>
+  body, html { margin:0; height:100%; background:#000; display:flex; flex-direction:column; }
+  #dosbox { flex:1; width:100%; height:100%; display:block; }
+  #keyboard { background:#222; padding:10px; display:grid; grid-template-columns: repeat(14, 1fr); gap:4px; }
+  .key { background:#444; color:#fff; border:none; border-radius:4px; padding:8px; font-size:14px; cursor:pointer; }
+  .key:active, .key.active { background:#888; }
+  .wide { grid-column: span 2; }
+  .space { grid-column: span 5; }
+</style>
 </head>
 <body>
-  <canvas id="dosbox"></canvas>
-  <div id="keyboard"></div>
+<canvas id="dosbox"></canvas>
+<div id="keyboard"></div>
 
-  <script src="jsdos/js-dos.js"></script>
-  <script>
-    let ci;
-    const canvas = document.getElementById("dosbox");
+<script src="jsdos/js-dos.js"></script>
+<script>
+let ci;
+const canvas = document.getElementById("dosbox");
 
-    Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" })
-      .ready((fs, main, control) => {
-        ci = control;
-        fs.extract("basic.zip").then(() => {
-          main(["-c", "mount c .", "-c", "c:", "-c", "cd gwbasic", "-c", "gwbasic"]);
-        });
-      });
+// Start js-dos
+Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" })
+.ready((fs, main, control) => {
+  ci = control;
+  fs.extract("basic.zip").then(() => {
+    main(["-c", "mount c .", "-c", "c:", "-c", "cd gwbasic", "-c", "gwbasic"]);
+  });
+});
 
-    // Keyboard layout
-    const layout = [
-      ["Esc","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","-","=","Backspace"],
-      ["Tab","1","2","3","4","5","6","7","8","9","0","-","=","Enter"],
-      ["Caps","Q","W","E","R","T","Y","U","I","O","P","[","]","\\",""],
-      ["Shift","A","S","D","F","G","H","J","K","L",";","'","","Shift",""],
-      ["Z","X","C","V","B","N","M",",",".","/","","","","",""],
-      ["Ctrl","Alt","Space","Alt","Ctrl","","","","","","","","",""]
-    ];
+// Keyboard layout
+const layout = [
+  ["Esc","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","-","=","Backspace"],
+  ["Tab","1","2","3","4","5","6","7","8","9","0","-","=","Enter"],
+  ["Caps","Q","W","E","R","T","Y","U","I","O","P","[","]","\\",""],
+  ["Shift","A","S","D","F","G","H","J","K","L",";","'","","Shift",""],
+  ["Z","X","C","V","B","N","M",",",".","/","","","","",""],
+  ["Ctrl","Alt","Space","Alt","Ctrl","","","","","","","","",""]
+];
 
-    // DOS scancodes
-    const keymap = {
-      "A":0x1E,"B":0x30,"C":0x2E,"D":0x20,"E":0x12,"F":0x21,"G":0x22,"H":0x23,"I":0x17,"J":0x24,
-      "K":0x25,"L":0x26,"M":0x32,"N":0x31,"O":0x18,"P":0x19,"Q":0x10,"R":0x13,"S":0x1F,"T":0x14,
-      "U":0x16,"V":0x2F,"W":0x11,"X":0x2D,"Y":0x15,"Z":0x2C,
-      "1":0x02,"2":0x03,"3":0x04,"4":0x05,"5":0x06,"6":0x07,"7":0x08,"8":0x09,"9":0x0A,"0":0x0B,
-      "-":0x0C,"=":0x0D,"[":0x1A,"]":0x1B,"\\":0x2B,";":0x27,"'":0x28,",":0x33,".":0x34,"/":0x35,
-      "Space":0x39,"Enter":0x1C,"Backspace":0x0E,"Tab":0x0F,"Esc":0x01,
-      "Shift":0x2A,"Ctrl":0x1D,"Alt":0x38,"Caps":0x3A
-    };
+// Symbols for Shift
+const shiftSymbols = {
+  "1":"!","2":"@","3":"#","4":"$","5":"%","6":"^","7":"&","8":"*","9":"(","0":")",
+  "-":"_","=":"+","[":"{","]":"}","\\":"|",";":":","'":'"',",":"<",".":">","/":"?"
+};
 
-    const shiftSymbols = {
-      "1":"!","2":"@","3":"#","4":"$","5":"%","6":"^","7":"&","8":"*","9":"(","0":")",
-      "-":"_","=":"+","[":"{","]":"}","\\":"|",";":":","'":'"',",":"<",".":">","/":"?"
-    };
+let shiftActive = false;
+let capsActive = false;
 
-    let shiftActive = false;
-    let capsActive = false;
+const kb = document.getElementById("keyboard");
 
-    const kb = document.getElementById("keyboard");
-    layout.forEach(row => {
-      row.forEach(k => {
-        if(k === "") { kb.appendChild(document.createElement("div")); return; }
-        const btn = document.createElement("button");
-        btn.className = "key";
-        btn.textContent = k;
-        if(k==="Backspace"||k==="Enter") btn.classList.add("wide");
-        if(k==="Space") btn.classList.add("space");
+// Build keyboard
+layout.forEach(row => {
+  row.forEach(k => {
+    if(k === "") { kb.appendChild(document.createElement("div")); return; }
+    const btn = document.createElement("button");
+    btn.className = "key";
+    btn.textContent = k;
+    if(k==="Backspace"||k==="Enter") btn.classList.add("wide");
+    if(k==="Space") btn.classList.add("space");
 
-        btn.addEventListener("click", () => sendKey(k, btn));
-        kb.appendChild(btn);
-      });
-    });
+    btn.addEventListener("click", () => sendKey(k, btn));
+    kb.appendChild(btn);
+  });
+});
 
-    function sendKey(k, btn) {
-      if(!ci) return;
+function sendKey(k, btn) {
+  if(!ci) return;
 
-      // Toggle shift
-      if(k === "Shift") {
-        shiftActive = !shiftActive;
-        btn.classList.toggle("active", shiftActive);
-        return;
-      }
+  // Toggle shift
+  if(k === "Shift") {
+    shiftActive = !shiftActive;
+    btn.classList.toggle("active", shiftActive);
+    return;
+  }
 
-      // Toggle caps
-      if(k === "Caps") {
-        capsActive = !capsActive;
-        btn.classList.toggle("active", capsActive);
-        return;
-      }
+  // Toggle caps
+  if(k === "Caps") {
+    capsActive = !capsActive;
+    btn.classList.toggle("active", capsActive);
+    return;
+  }
 
-      let sc = keymap[k.toUpperCase()];
-      if(!sc) return;
+  // Determine character to send
+  let char = k;
 
-      // Determine if Shift should be pressed
-      let pressShift = false;
-      if(/[A-Z]/.test(k)) {
-        pressShift = (shiftActive && !capsActive) || (!shiftActive && capsActive);
-      } else if(shiftSymbols[k] && shiftActive) {
-        pressShift = true;
-      }
+  // Apply Caps/Shift for letters
+  if(/[A-Z]/i.test(char)) {
+    if((shiftActive && !capsActive) || (!shiftActive && capsActive)) char = char.toUpperCase();
+    else char = char.toLowerCase();
+  } else if(shiftActive && shiftSymbols[char]) {
+    char = shiftSymbols[char];
+  }
 
-      if(pressShift) ci.sendKeyEvent({type:"keydown", code:0x2A}); // Shift down
-      ci.sendKeyEvent({type:"keydown", code:sc});
-      ci.sendKeyEvent({type:"keyup", code:sc});
-      if(pressShift) ci.sendKeyEvent({type:"keyup", code:0x2A}); // Shift up
-
-      if(shiftActive && !/[A-Z]/.test(k)) shiftActive = false; // auto-reset
-      document.querySelectorAll(".key.active").forEach(b => b.classList.remove("active"));
+  // Send key
+  if(char.length === 1) {
+    ci.sendKeyPress(char.charCodeAt(0));
+  } else {
+    // Non-printable keys
+    const special = { "Enter":13, "Backspace":8, "Tab":9, "Esc":27, "Space":32 };
+    if(special[char]) {
+      ci.sendKeyEvent({type:"keydown", code:special[char]});
+      ci.sendKeyEvent({type:"keyup", code:special[char]});
     }
-  </script>
+  }
+
+  // Auto-reset shift
+  if(shiftActive && !/[A-Z]/i.test(k)) shiftActive = false;
+  document.querySelectorAll(".key.active").forEach(b => b.classList.remove("active"));
+}
+</script>
 </body>
 </html>
