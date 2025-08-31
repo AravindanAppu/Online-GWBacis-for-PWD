@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <title>GW-BASIC in Browser with Virtual Keyboard</title>
-  <!-- load js-dos v8 UMD bundle -->
-  <script src="https://js-dos.com/v8/build/releases/latest/js-dos/js-dos.js"></script>
-  <link rel="stylesheet" href="https://js-dos.com/v8/build/releases/latest/js-dos/js-dos.css">
+  <!-- Load js-dos v8 UMD -->
+  <script src="https://js-dos.com/v8/build/js-dos/js-dos.js"></script>
+  <link rel="stylesheet" href="https://js-dos.com/v8/build/js-dos/js-dos.css">
   <style>
     body {
       margin: 0;
@@ -14,6 +14,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      font-family: sans-serif;
     }
     #dosbox {
       flex: 1;
@@ -50,10 +51,10 @@
     const dosbox = document.getElementById("dosbox");
     const keyboard = document.getElementById("keyboard");
 
-    Dos(dosbox, { 
-      url: "https://js-dos.com/v8/build/releases/latest/wdosbox.js" 
+    Dos(dosbox, {
+      url: "https://js-dos.com/v8/build/wdosbox.js"
     }).then((ci) => {
-      // Run GW-BASIC (make sure basic.zip is in same folder or hosted)
+      // Load GW-BASIC (basic.zip must be in same folder or served correctly)
       ci.fs.extract("basic.zip").then(() => {
         ci.main(["-c", "mount c .", "-c", "c:", "-c", "cd gwbasic", "-c", "gwbasic"]);
       });
