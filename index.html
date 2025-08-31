@@ -2,8 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>GW-BASIC in Browser</title>
-  <!-- Load js-dos runtime -->
+  <title>GW-BASIC in Browser with DOS Keyboard</title>
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <style>
     body, html {
@@ -17,37 +16,26 @@
       flex: 1;
       width: 100%;
       background: black;
-      outline: none;
-    }
-    button {
-      background: #444;
-      color: white;
-      border: none;
-      padding: 12px;
-      font-size: 16px;
-      width: 100%;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <canvas id="dosbox"></canvas>
-  <button id="dosKbdBtn">Show DOS Keyboard</button>
-
   <script>
     const canvas = document.getElementById("dosbox");
-    const dosKbdBtn = document.getElementById("dosKbdBtn");
 
-    // Start js-dos
     const dos = Dos(canvas, {
-      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js",
+      style: "default",
+      thinSidebar: false,
+      kiosk: false,
+      noSideBar: false,
+      // Optional: remove other sidebar buttons if desired
+      // noFullscreen: true,
+      // noSocialLinks: true
     });
 
-    let ci; // control interface
-
-    dos.ready((fs, main, _ci) => {
-      ci = _ci;  // store control interface
-
+    dos.ready((fs, main, ci) => {
       fs.extract("basic.zip").then(() => {
         main([
           "-c", "mount c .",
@@ -57,14 +45,6 @@
         ]);
       });
     });
-
-    // Show DOS built-in keyboard (toggle)
-    dosKbdBtn.addEventListener("click", () => {
-      if (ci) {
-        ci.showKeyboard(true);  // open keyboard
-      }
-    });
   </script>
 </body>
 </html>
-
