@@ -5,12 +5,13 @@
   <title>GW-BASIC Local (js-dos v6.22)</title>
   <link rel="stylesheet" href="jsdos/js-dos.css">
   <style>
-    body, html { margin:0; height:100%; background:#000; color:#0f0; }
-    #dosbox { width:100%; height:100%; }
+    body, html { margin:0; height:100%; background:#000; }
+    #dosbox { width:100%; height:100%; display:block; }
   </style>
 </head>
 <body>
-  <div id="dosbox"></div>
+  <canvas id="dosbox"></canvas>
+
   <script src="jsdos/js-dos.js"></script>
   <script>
     Dos(document.getElementById("dosbox"), {
