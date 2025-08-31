@@ -43,7 +43,7 @@
 
     Dos(canvas, { 
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
-      keyboard: true }).ready((fs, main) => {
+      }).ready((fs, main) => {
       fs.extract("basic.zip").then(() => {
         main([
           "-c", "mount c .",
@@ -70,6 +70,7 @@
   </script>
 </body>
 </html>
+
 
 
 
