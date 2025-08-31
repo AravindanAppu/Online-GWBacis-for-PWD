@@ -47,9 +47,10 @@
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     });
 
-    dos.ready((fs, main) => {
-      // save reference for later input injection
-      canvas.dos = dos;
+    let ci; // control interface
+
+    dos.ready((fs, main, _ci) => {
+      ci = _ci;  // store control interface
 
       fs.extract("basic.zip").then(() => {
         main([
@@ -61,20 +62,55 @@
       });
     });
 
-    // Tapping canvas or button shows Android keyboard
+    // Show keyboard on tap
     canvas.addEventListener("click", () => hiddenInput.focus());
     kbdBtn.addEventListener("click", () => hiddenInput.focus());
 
-    // Send typed characters into DOSBox
-    hiddenInput.addEventListener("input", (e) => {
-      const val = e.target.value;
-      if (val.length > 0) {
-        const ch = val[val.length - 1];
-        if (canvas.dos) {
-          canvas.dos.keyboard(ch); // inject key properly
-        }
-        e.target.value = "";
+    // Handle normal characters and special keys
+    hiddenInput.addEventListener("keydown", (e) => {
+      if (!ci) return;
+
+      switch (e.key) {
+        case "Enter":
+          ci.sendKeyEvent({ type: "keydown", code: 13 });
+          ci.sendKeyEvent({ type: "keyup", code: 13 });
+          break;
+        case "Backspace":
+          ci.sendKeyEvent({ type: "keydown", code: 8 });
+          ci.sendKeyEvent({ type: "keyup", code: 8 });
+          break;
+        case "Tab":
+          ci.sendKeyEvent({ type: "keydown", code: 9 });
+          ci.sendKeyEvent({ type: "keyup", code: 9 });
+          break;
+        case "Escape":
+          ci.sendKeyEvent({ type: "keydown", code: 27 });
+          ci.sendKeyEvent({ type: "keyup", code: 27 });
+          break;
+        case "ArrowUp":
+          ci.sendKeyEvent({ type: "keydown", code: 38 });
+          ci.sendKeyEvent({ type: "keyup", code: 38 });
+          break;
+        case "ArrowDown":
+          ci.sendKeyEvent({ type: "keydown", code: 40 });
+          ci.sendKeyEvent({ type: "keyup", code: 40 });
+          break;
+        case "ArrowLeft":
+          ci.sendKeyEvent({ type: "keydown", code: 37 });
+          ci.sendKeyEvent({ type: "keyup", code: 37 });
+          break;
+        case "ArrowRight":
+          ci.sendKeyEvent({ type: "keydown", code: 39 });
+          ci.sendKeyEvent({ type: "keyup", code: 39 });
+          break;
+        default:
+          // Handle normal printable characters
+          if (e.key.length === 1) {
+            ci.sendKeyPress(e.key.charCodeAt(0));
+          }
       }
+
+      e.preventDefault(); // prevent browser from hijacking keys
     });
   </script>
 </body>
