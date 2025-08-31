@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>GW-BASIC Local</title>
+  <title>GW-BASIC Local (js-dos v8)</title>
   <link rel="stylesheet" href="jsdos/js-dos.css">
   <style>
     body, html { margin:0; height:100%; background:#000; }
@@ -12,26 +12,33 @@
 </head>
 <body>
   <canvas id="dosbox"></canvas>
-  <button id="kbdBtn">Show Keyboard</button>
+  <button id="kbdBtn">Show Virtual Keyboard</button>
 
   <script src="jsdos/js-dos.js"></script>
   <script>
     const canvas = document.getElementById("dosbox");
-    Dos(canvas, { 
-      url: "basic.zip"   // local file in same folder
-    }).ready((fs, main) => {
-      main([
+
+    (async () => {
+      const dos = await DosFactory(canvas, {
+        url: "basic.zip"
+      });
+
+      // Launch gwbasic
+      dos.main([
         "-c", "mount c .",
         "-c", "c:",
         "-c", "cd gwbasic",
         "-c", "gwbasic"
       ]);
-    });
 
-    // Show virtual keyboard
+      // keep reference for later
+      window.ci = dos.ci;
+    })();
+
+    // Button to show virtual keyboard
     document.getElementById("kbdBtn").addEventListener("click", () => {
       if (window.ci) {
-        ci.showKeyboard(true);
+        window.ci.showKeyboard(true);
       }
     });
   </script>
