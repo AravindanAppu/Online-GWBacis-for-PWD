@@ -60,18 +60,67 @@
       });
     });
 
-    // Forward mobile keyboard characters
+    // DOS scan codes (partial set, enough for BASIC use)
+    const scanCodes = {
+      "A": 0x1E, "B": 0x30, "C": 0x2E, "D": 0x20, "E": 0x12,
+      "F": 0x21, "G": 0x22, "H": 0x23, "I": 0x17, "J": 0x24,
+      "K": 0x25, "L": 0x26, "M": 0x32, "N": 0x31, "O": 0x18,
+      "P": 0x19, "Q": 0x10, "R": 0x13, "S": 0x1F, "T": 0x14,
+      "U": 0x16, "V": 0x2F, "W": 0x11, "X": 0x2D, "Y": 0x15,
+      "Z": 0x2C,
+      "0": 0x0B, "1": 0x02, "2": 0x03, "3": 0x04, "4": 0x05,
+      "5": 0x06, "6": 0x07, "7": 0x08, "8": 0x09, "9": 0x0A,
+      " ": 0x39, "\n": 0x1C, "\r": 0x1C,  // Enter
+      "\b": 0x0E,                          // Backspace
+      "ARROW_UP": 0x48,
+      "ARROW_DOWN": 0x50,
+      "ARROW_LEFT": 0x4B,
+      "ARROW_RIGHT": 0x4D
+    };
+
+    function getScanCode(ch) {
+      if (scanCodes[ch]) return scanCodes[ch];
+      if (scanCodes[ch.toUpperCase()]) return scanCodes[ch.toUpperCase()];
+      return 0;
+    }
+
+    // Forward typed characters to DOS
     nativeInput.addEventListener("input", (e) => {
       if (!ci) return;
       const val = e.target.value;
       if (val.length > 0) {
         const ch = val.slice(-1);
-        ci.simulateKeyPress(ch.charCodeAt(0));
+        const scan = getScanCode(ch);
+        const charCode = ch.charCodeAt(0);
+        if (scan) {
+          ci.simulateKeyEvent(scan, charCode, true);   // key down
+          ci.simulateKeyEvent(scan, charCode, false);  // key up
+        }
         e.target.value = "";
       }
     });
 
-    // Refocus on canvas tap
+    // Handle special keys (arrows, backspace, enter) directly
+    nativeInput.addEventListener("keydown", (e) => {
+      if (!ci) return;
+      let scan = 0, charCode = 0;
+
+      switch (e.key) {
+        case "Backspace": scan = scanCodes["\b"]; charCode = 8; break;
+        case "Enter":     scan = scanCodes["\n"]; charCode = 13; break;
+        case "ArrowUp":   scan = scanCodes["ARROW_UP"]; break;
+        case "ArrowDown": scan = scanCodes["ARROW_DOWN"]; break;
+        case "ArrowLeft": scan = scanCodes["ARROW_LEFT"]; break;
+        case "ArrowRight":scan = scanCodes["ARROW_RIGHT"]; break;
+      }
+
+      if (scan) {
+        ci.simulateKeyEvent(scan, charCode, true);
+        ci.simulateKeyEvent(scan, charCode, false);
+        e.preventDefault();
+      }
+    });
+
     dosRoot.addEventListener("click", () => {
       nativeInput.focus();
     });
