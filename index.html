@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>GW-BASIC in Browser</title>
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     body {
       margin: 0;
@@ -13,18 +14,24 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      overflow: hidden;
     }
     #dos-root {
       width: 100vw;
       height: 60vh;
       border: 2px solid #666;
     }
+    /* Fullscreen invisible input */
     #native-input {
       position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       opacity: 0;
-      height: 0;
-      width: 0;
+      font-size: 16px; /* prevent zoom */
       border: none;
+      background: transparent;
     }
   </style>
 </head>
@@ -40,35 +47,31 @@
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
-      // mount local files
-      main(["basic.zip", "-c", "gwbasic"]).then((client) => {
-        ci = client;
-        nativeInput.focus();
+      // Mount gwbasic + user programs from basic.zip as D:
+      fs.extract("basic.zip").then(() => {
+        main(["-c", "mount d .", 
+              "-c", "d:", 
+              "-c", "cd gwbasic"
+              "-c", "gwbasic"
+             ]).then((client) => {
+          ci = client;
+          nativeInput.focus();
+        });
       });
     });
 
-    // Handle text input (multi-char)
+    // Forward mobile keyboard characters
     nativeInput.addEventListener("input", (e) => {
       if (!ci) return;
       const val = e.target.value;
       if (val.length > 0) {
-        for (let i = 0; i < val.length; i++) {
-          ci.simulateKeyPress(val.charCodeAt(i));
-        }
+        const ch = val.slice(-1);
+        ci.simulateKeyPress(ch.charCodeAt(0));
         e.target.value = "";
       }
     });
 
-    // Handle special keys
-    nativeInput.addEventListener("keydown", (e) => {
-      if (!ci) return;
-      if (e.key === "Enter") { ci.simulateKeyPress(13); e.preventDefault(); }
-      if (e.key === "Backspace") { ci.simulateKeyPress(8); e.preventDefault(); }
-      if (e.key === "Tab") { ci.simulateKeyPress(9); e.preventDefault(); }
-      if (e.key === " ") { ci.simulateKeyPress(32); e.preventDefault(); }
-    });
-
-    // Ensure keyboard pops up
+    // Refocus on canvas tap
     dosRoot.addEventListener("click", () => {
       nativeInput.focus();
     });
