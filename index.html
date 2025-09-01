@@ -1,81 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <title>GW-BASIC in Browser</title>
-  <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="js-dos.js"></script>
   <style>
-    body {
+    body, html {
       margin: 0;
+      height: 100%;
       background: black;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
-      overflow: hidden;
+      align-items: center;
     }
-    #dos-root {
+    #dosbox {
       width: 100vw;
-      height: 60vh;
-      border: 2px solid #666;
+      height: 70vh;
     }
-    /* Fullscreen invisible input */
     #native-input {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 100%;
       opacity: 0;
       font-size: 16px; /* prevent zoom */
       border: none;
-      background: transparent;
     }
   </style>
 </head>
 <body>
-  <canvas id="dos-root"></canvas>
-  <input type="text" id="native-input" autofocus />
+  <canvas id="dosbox"></canvas>
+  <input id="native-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
   <script>
-    const dosRoot = document.getElementById("dos-root");
-    const nativeInput = document.getElementById("native-input");
-    let ci = null;
+    // ASCII/scan code mapping
+    const keyMap = {
+      "Enter": 13, "Backspace": 8, "Tab": 9, " ": 32,
+      "0": 48, "1": 49, "2": 50, "3": 51, "4": 52,
+      "5": 53, "6": 54, "7": 55, "8": 56, "9": 57,
+      "A": 65, "B": 66, "C": 67, "D": 68, "E": 69, "F": 70,
+      "G": 71, "H": 72, "I": 73, "J": 74, "K": 75, "L": 76,
+      "M": 77, "N": 78, "O": 79, "P": 80, "Q": 81, "R": 82,
+      "S": 83, "T": 84, "U": 85, "V": 86, "W": 87, "X": 88,
+      "Y": 89, "Z": 90,
+      ";": 59, ":": 58, "'": 39, "\"": 34, ",": 44, "<": 60,
+      ".": 46, ">": 62, "/": 47, "?": 63, "[": 91, "]": 93,
+      "\\": 92, "|": 124, "-": 45, "_": 95, "=": 61, "+": 43,
+      "!": 33, "@": 64, "#": 35, "$": 36, "%": 37, "^": 94,
+      "&": 38, "*": 42, "(": 40, ")": 41
+    };
 
-    Dos(dosRoot, {
-      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
-    }).ready((fs, main) => {
-      // Mount gwbasic + user programs from basic.zip as D:
+    let ci = null;
+    let capsLock = false;
+
+    const canvas = document.getElementById("dosbox");
+    const nativeInput = document.getElementById("native-input");
+
+    Dos(canvas, { wdosboxUrl: "wdosbox.js" }).ready((fs, main) => {
       fs.extract("basic.zip").then(() => {
-        main(["-c", "mount d .", 
-              "-c", "d:", 
-              "-c", "cd gwbasic",
-              "-c", "gwbasic"
-             ]).then((client) => {
-          ci = client;
-          nativeInput.focus();
+        main(["-c", "MOUNT C .", "-c", "C:", "-c", "BASIC"]).then((commandInterface) => {
+          ci = commandInterface;
+
+          canvas.addEventListener("click", () => nativeInput.focus());
+
+          nativeInput.addEventListener("keydown", (e) => {
+            if (!ci) return;
+
+            // CapsLock toggle
+            if (e.key === "CapsLock") {
+              capsLock = !capsLock;
+              e.preventDefault();
+              return;
+            }
+
+            let key = e.key;
+            let isShift = e.shiftKey;
+
+            // Handle letters with CapsLock & Shift
+            if (key.length === 1 && key.match(/[a-zA-Z]/)) {
+              const upper = key.toUpperCase();
+              const lower = key.toLowerCase();
+              if (capsLock ^ isShift) {
+                key = upper;
+              } else {
+                key = lower;
+              }
+            }
+
+            // Map to ASCII
+            const code = keyMap[key] || key.charCodeAt(0);
+
+            ci.sendKeyEvent(code, true);
+            e.preventDefault();
+          });
+
+          nativeInput.addEventListener("keyup", (e) => {
+            if (!ci) return;
+
+            let key = e.key;
+            if (key === "CapsLock") {
+              e.preventDefault();
+              return;
+            }
+
+            let code = keyMap[key] || key.charCodeAt(0);
+            ci.sendKeyEvent(code, false);
+            e.preventDefault();
+          });
         });
       });
-    });
-
-    // Forward mobile keyboard characters
-    nativeInput.addEventListener("input", (e) => {
-      if (!ci) return;
-      const val = e.target.value;
-      if (val.length > 0) {
-        const ch = val.slice(-1);
-        ci.simulateKeyPress(ch.charCodeAt(0));
-        e.target.value = "";
-      }
-    });
-
-    // Refocus on canvas tap
-    dosRoot.addEventListener("click", () => {
-      nativeInput.focus();
     });
   </script>
 </body>
 </html>
-
