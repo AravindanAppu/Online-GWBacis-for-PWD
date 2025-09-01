@@ -1,71 +1,127 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>GW-BASIC in Browser</title>
-<link rel="stylesheet" href="jsdos/js-dos.css">
-<style>
-  body, html { margin:0; height:100%; background:#000; display:flex; flex-direction:column; }
-  #dosbox { flex:1; width:100%; height:100%; display:block; }
-</style>
+  <meta charset="utf-8">
+  <title>GW-BASIC in Browser</title>
+  <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      height: 100%;
+      background: black;
+      display: flex;
+      flex-direction: column;
+    }
+    #dosRoot {
+      flex: 1;
+    }
+    #vk {
+      background: #222;
+      padding: 6px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+      gap: 4px;
+    }
+    #vk button {
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 6px;
+      background: #444;
+      color: white;
+      border: none;
+    }
+    #vk button:active {
+      background: #666;
+    }
+    #nativeInput {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
+  <div id="dosRoot"></div>
+  <div id="vk"></div>
+  <input id="nativeInput" type="text" />
 
-<canvas id="dosbox"></canvas>
+  <script>
+    let ci = null;
+    let ctrlLatch = false, altLatch = false;
 
-<script src="jsdos/js-dos.js"></script>
-<script>
-const canvas = document.getElementById("dosbox");
-let ci;
+    const dosRoot = document.getElementById("dosRoot");
+    const vk = document.getElementById("vk");
+    const nativeInput = document.getElementById("nativeInput");
 
-Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" }).ready((fs, main, control) => {
-    ci = control;
-    fs.extract("basic.zip").then(() => {
-        main([
-            "-c","mount c .",
-            "-c","c:",
-            "-c","cd gwbasic",
-            "-c","gwbasic"
-        ]).then(() => {
-            canvas.focus();
-            console.log("GW-BASIC ready!");
-        });
+    // Utility keycode maps
+    function keyCodeFromKey(key) {
+      if (key.length === 1) return key.charCodeAt(0);
+      const map = { Enter: 13, Backspace: 8, Space: 32, Tab: 9 };
+      return map[key] || 0;
+    }
+    function codeFromKey(key) {
+      if (key.length === 1) return "Key" + key.toUpperCase();
+      const map = { Enter: "Enter", Backspace: "Backspace", Space: "Space", Tab: "Tab" };
+      return map[key] || "Key" + key.toUpperCase();
+    }
+
+    // Inject keys directly to emulator
+    function synthKey(key, opts={}) {
+      if (!ci) return;
+      const code = codeFromKey(key);
+      const keyCode = keyCodeFromKey(key);
+
+      const evDown = {
+        type: "keydown",
+        code,
+        key,
+        keyCode,
+        ctrlKey: ctrlLatch || !!opts.ctrlKey,
+        altKey: altLatch || !!opts.altKey,
+        shiftKey: !!opts.shiftKey
+      };
+      const evUp = { ...evDown, type: "keyup" };
+
+      ci.sendKeyEvent(evDown);
+      ci.sendKeyEvent(evUp);
+
+      if (key === "Ctrl") ctrlLatch = !ctrlLatch;
+      if (key === "Alt") altLatch = !altLatch;
+    }
+
+    // Native input → forward to DOS
+    nativeInput.addEventListener("input", (e) => {
+      const val = e.target.value;
+      if (!val) return;
+      const lastChar = val.slice(-1);
+      synthKey(lastChar);
+      e.target.value = "";
     });
-});
 
-// On-screen virtual keyboard
-function createKeyboard() {
-    const keys = "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".split("");
-    const keyboard = document.createElement("div");
-    keyboard.style.position = "absolute";
-    keyboard.style.bottom = "0";
-    keyboard.style.left = "0";
-    keyboard.style.width = "100%";
-    keyboard.style.display = "flex";
-    keyboard.style.flexWrap = "wrap";
-    keyboard.style.background = "#222";
-    document.body.appendChild(keyboard);
-
-    keys.forEach(k => {
-        const btn = document.createElement("button");
-        btn.textContent = k;
-        btn.style.flex = "1 0 6%";
-        btn.style.margin = "2px";
-        btn.style.padding = "10px";
-        btn.style.fontSize = "16px";
-        btn.addEventListener("click", () => {
-            if(!ci) return;
-            const code = k.charCodeAt(0);
-            ci.sendKeyEvent({type:"keydown", key:k, keyCode:code});
-            ci.simulateKeyPress(code);
-            ci.sendKeyEvent({type:"keyup", key:k, keyCode:code});
-        });
-        keyboard.appendChild(btn);
+    // Virtual keyboard
+    const vkKeys = [
+      "1","2","3","4","5","6","7","8","9","0",
+      "Q","W","E","R","T","Y","U","I","O","P",
+      "A","S","D","F","G","H","J","K","L","Enter",
+      "Z","X","C","V","B","N","M","Backspace","Space"
+    ];
+    vkKeys.forEach(k => {
+      const b = document.createElement("button");
+      b.textContent = k;
+      b.onclick = () => {
+        synthKey(k === "Space" ? " " : k);
+        nativeInput.focus(); // keep soft keyboard up
+      };
+      vk.appendChild(b);
     });
-}
 
-createKeyboard();
-</script>
-
+    // Boot emulator
+    Dos(dosRoot).ready((fs, main) => {
+      main(["-c", "gwbasic"]).then((client) => {
+        ci = client;
+        nativeInput.focus(); // open soft keyboard immediately
+      });
+    });
+  </script>
 </body>
 </html>
