@@ -8,59 +8,38 @@
   body, html { margin:0; height:100%; background:#000; display:flex; flex-direction:column; }
   #dosbox { flex:1; width:100%; height:100%; display:block; }
   #startBtn { position:fixed; bottom:10px; left:10px; z-index:1000; padding:10px 20px; font-size:16px; }
-  #status { position:fixed; top:10px; left:10px; color:#fff; font-family:sans-serif; z-index:1000; }
 </style>
 </head>
 <body>
 
 <button id="startBtn">Start GW-BASIC</button>
-<div id="status"></div>
 <canvas id="dosbox"></canvas>
 
 <script src="jsdos/js-dos.js"></script>
 <script>
 const startBtn = document.getElementById("startBtn");
-const status = document.getElementById("status");
 const canvas = document.getElementById("dosbox");
-
-function setStatus(msg) {
-    status.textContent = msg;
-}
 
 startBtn.addEventListener("click", () => {
     canvas.focus();
-    setStatus("Starting JS-DOS...");
 
     Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" })
     .ready((fs, main) => {
-        setStatus("Extracting basic.zip...");
         fs.extract("basic.zip").then(() => {
-
-            setStatus("Launching GW-BASIC...");
             main([
-
+                "-startmapper",
+                "-conf", "dosbox.conf",
                 "-c", "mount c .",
                 "-c", "c:",
                 "-c", "cd gwbasic",
                 "-c", "gwbasic"
-            ]).then((ci) => {
-                setStatus("GW-BASIC ready. Use your keyboard!");
+            ]).then(ci => {
                 canvas.focus();
-            }).catch(err => {
-                setStatus("Error starting GW-BASIC: " + err);
-                console.error(err);
+                console.log("GW-BASIC ready!");
             });
-
-        }).catch(err => {
-            setStatus("Error extracting basic.zip: " + err);
-            console.error(err);
         });
-    }).catch(err => {
-        setStatus("Error initializing JS-DOS: " + err);
-        console.error(err);
     });
 });
 </script>
 </body>
 </html>
-
