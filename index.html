@@ -51,6 +51,7 @@
         main([
           "-c", "mount d .",
           "-c", "d:",
+          "-c", "cd gwbasic",
           "-c", "gwbasic"
         ]).then((client) => {
           ci = client;
