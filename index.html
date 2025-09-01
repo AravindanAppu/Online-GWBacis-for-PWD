@@ -1,130 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>GW-BASIC in Browser</title>
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <style>
-    body, html {
+    body {
       margin: 0;
-      height: 100%;
       background: black;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
-    #dosRoot {
-      flex: 1;
+    #dos-root {
+      border: 2px solid #666;
     }
-    #vk {
-      background: #222;
-      padding: 6px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-      gap: 4px;
-    }
-    #vk button {
-      padding: 10px;
-      font-size: 14px;
-      border-radius: 6px;
-      background: #444;
-      color: white;
-      border: none;
-    }
-    #vk button:active {
-      background: #666;
-    }
-    #nativeInput {
+    #native-input {
       position: absolute;
-      opacity: 0;
-      pointer-events: none;
+      opacity: 0; /* invisible input to capture mobile keyboard */
+      height: 0;
+      width: 0;
+      border: none;
     }
   </style>
 </head>
 <body>
-  <div id="dosRoot"></div>
-  <div id="vk"></div>
-  <input id="nativeInput" type="text" />
+  <!-- Canvas required by js-dos -->
+  <canvas id="dos-root" width="640" height="400"></canvas>
+
+  <!-- Hidden text input to trigger Android/iOS keyboard -->
+  <input type="text" id="native-input" autofocus />
 
   <script>
+    const dosRoot = document.getElementById("dos-root");
+    const nativeInput = document.getElementById("native-input");
     let ci = null;
-    let ctrlLatch = false, altLatch = false;
 
-    const dosRoot = document.getElementById("dosRoot");
-    const vk = document.getElementById("vk");
-    const nativeInput = document.getElementById("nativeInput");
-
-    // Utility keycode maps
-    function keyCodeFromKey(key) {
-      if (key.length === 1) return key.charCodeAt(0);
-      const map = { Enter: 13, Backspace: 8, Space: 32, Tab: 9 };
-      return map[key] || 0;
-    }
-    function codeFromKey(key) {
-      if (key.length === 1) return "Key" + key.toUpperCase();
-      const map = { Enter: "Enter", Backspace: "Backspace", Space: "Space", Tab: "Tab" };
-      return map[key] || "Key" + key.toUpperCase();
-    }
-
-    // Inject keys directly to emulator
-    function synthKey(key, opts={}) {
-      if (!ci) return;
-      const code = codeFromKey(key);
-      const keyCode = keyCodeFromKey(key);
-
-      const evDown = {
-        type: "keydown",
-        code,
-        key,
-        keyCode,
-        ctrlKey: ctrlLatch || !!opts.ctrlKey,
-        altKey: altLatch || !!opts.altKey,
-        shiftKey: !!opts.shiftKey
-      };
-      const evUp = { ...evDown, type: "keyup" };
-
-      ci.sendKeyEvent(evDown);
-      ci.sendKeyEvent(evUp);
-
-      if (key === "Ctrl") ctrlLatch = !ctrlLatch;
-      if (key === "Alt") altLatch = !altLatch;
-    }
-
-    // Native input → forward to DOS
-    nativeInput.addEventListener("input", (e) => {
-      const val = e.target.value;
-      if (!val) return;
-      const lastChar = val.slice(-1);
-      synthKey(lastChar);
-      e.target.value = "";
-    });
-
-    // Virtual keyboard
-    const vkKeys = [
-      "1","2","3","4","5","6","7","8","9","0",
-      "Q","W","E","R","T","Y","U","I","O","P",
-      "A","S","D","F","G","H","J","K","L","Enter",
-      "Z","X","C","V","B","N","M","Backspace","Space"
-    ];
-    vkKeys.forEach(k => {
-      const b = document.createElement("button");
-      b.textContent = k;
-      b.onclick = () => {
-        synthKey(k === "Space" ? " " : k);
-        nativeInput.focus(); // keep soft keyboard up
-      };
-      vk.appendChild(b);
-    });
-
-    // Boot emulator
     Dos(dosRoot, {
-  wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
-}).ready((fs, main) => {
-  main(["basic.zip", "-c", "gwbasic"]).then((client) => {
-    ci = client;
-    nativeInput.focus();
-  });
-});
+      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+    }).ready((fs, main) => {
+      main(["basic.zip", "-c", "gwbasic"]).then((client) => {
+        ci = client;
+        nativeInput.focus(); // bring up mobile keyboard
+      });
+    });
+
+    // Forward input characters from mobile keyboard → DOS
+    nativeInput.addEventListener("input", (e) => {
+      if (!ci) return;
+      const val = e.target.value;
+      if (val.length > 0) {
+        const ch = val.slice(-1); // last character typed
+        ci.simulateKeyPress(ch.charCodeAt(0));
+        e.target.value = "";
+      }
+    });
+
+    // Ensure keyboard pops up on click
+    dosRoot.addEventListener("click", () => {
+      nativeInput.focus();
+    });
   </script>
 </body>
 </html>
-
