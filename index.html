@@ -60,18 +60,59 @@
       });
     });
 
-    // Forward mobile keyboard characters
-    nativeInput.addEventListener("input", (e) => {
+    // DOS keymap (scan codes / ASCII as expected by DOSBox)
+    const keyMap = {
+      "Backspace": 8,
+      "Tab": 9,
+      "Enter": 13,
+      "Escape": 27,
+      " ": 32,
+
+      "ArrowLeft": 0x4B00,
+      "ArrowRight": 0x4D00,
+      "ArrowUp": 0x4800,
+      "ArrowDown": 0x5000,
+
+      "Insert": 0x5200,
+      "Delete": 0x5300,
+      "Home": 0x4700,
+      "End": 0x4F00,
+      "PageUp": 0x4900,
+      "PageDown": 0x5100,
+
+      "F1": 0x3B00,
+      "F2": 0x3C00,
+      "F3": 0x3D00,
+      "F4": 0x3E00,
+      "F5": 0x3F00,
+      "F6": 0x4000,
+      "F7": 0x4100,
+      "F8": 0x4200,
+      "F9": 0x4300,
+      "F10": 0x4400
+    };
+
+    // Send keys into DOSBox
+    nativeInput.addEventListener("keydown", (e) => {
       if (!ci) return;
-      const val = e.target.value;
-      if (val.length > 0) {
-        const ch = val.slice(-1);
-        ci.simulateKeyPress(ch.charCodeAt(0));
-        e.target.value = "";
+
+      let code = null;
+
+      if (keyMap[e.key]) {
+        // Special mapped keys
+        code = keyMap[e.key];
+      } else if (e.key.length === 1) {
+        // Printable ASCII characters
+        code = e.key.charCodeAt(0);
+      }
+
+      if (code !== null) {
+        ci.simulateKeyPress(code);
+        e.preventDefault();
       }
     });
 
-    // Refocus on canvas tap
+    // Keep focus when tapping canvas
     dosRoot.addEventListener("click", () => {
       nativeInput.focus();
     });
