@@ -15,11 +15,13 @@
       height: 100vh;
     }
     #dos-root {
+      width: 100vw;
+      height: 60vh;
       border: 2px solid #666;
     }
     #native-input {
       position: absolute;
-      opacity: 0; /* invisible input to capture mobile keyboard */
+      opacity: 0;
       height: 0;
       width: 0;
       border: none;
@@ -27,10 +29,7 @@
   </style>
 </head>
 <body>
-  <!-- Canvas required by js-dos -->
-  <canvas id="dos-root" width="640" height="400"></canvas>
-
-  <!-- Hidden text input to trigger Android/iOS keyboard -->
+  <canvas id="dos-root"></canvas>
   <input type="text" id="native-input" autofocus />
 
   <script>
@@ -41,24 +40,35 @@
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
+      // mount local files
       main(["basic.zip", "-c", "gwbasic"]).then((client) => {
         ci = client;
-        nativeInput.focus(); // bring up mobile keyboard
+        nativeInput.focus();
       });
     });
 
-    // Forward input characters from mobile keyboard → DOS
+    // Handle text input (multi-char)
     nativeInput.addEventListener("input", (e) => {
       if (!ci) return;
       const val = e.target.value;
       if (val.length > 0) {
-        const ch = val.slice(-1); // last character typed
-        ci.simulateKeyPress(ch.charCodeAt(0));
+        for (let i = 0; i < val.length; i++) {
+          ci.simulateKeyPress(val.charCodeAt(i));
+        }
         e.target.value = "";
       }
     });
 
-    // Ensure keyboard pops up on click
+    // Handle special keys
+    nativeInput.addEventListener("keydown", (e) => {
+      if (!ci) return;
+      if (e.key === "Enter") { ci.simulateKeyPress(13); e.preventDefault(); }
+      if (e.key === "Backspace") { ci.simulateKeyPress(8); e.preventDefault(); }
+      if (e.key === "Tab") { ci.simulateKeyPress(9); e.preventDefault(); }
+      if (e.key === " ") { ci.simulateKeyPress(32); e.preventDefault(); }
+    });
+
+    // Ensure keyboard pops up
     dosRoot.addEventListener("click", () => {
       nativeInput.focus();
     });
