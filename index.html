@@ -21,7 +21,6 @@
       height: 60vh;
       border: 2px solid #666;
     }
-    /* Fullscreen invisible input */
     #native-input {
       position: absolute;
       top: 0;
@@ -29,7 +28,7 @@
       width: 100%;
       height: 100%;
       opacity: 0;
-      font-size: 16px; /* prevent zoom */
+      font-size: 16px;
       border: none;
       background: transparent;
     }
@@ -60,63 +59,72 @@
       });
     });
 
-    // DOS scan codes (partial set, enough for BASIC use)
-    const scanCodes = {
-      "A": 0x1E, "B": 0x30, "C": 0x2E, "D": 0x20, "E": 0x12,
-      "F": 0x21, "G": 0x22, "H": 0x23, "I": 0x17, "J": 0x24,
-      "K": 0x25, "L": 0x26, "M": 0x32, "N": 0x31, "O": 0x18,
-      "P": 0x19, "Q": 0x10, "R": 0x13, "S": 0x1F, "T": 0x14,
-      "U": 0x16, "V": 0x2F, "W": 0x11, "X": 0x2D, "Y": 0x15,
-      "Z": 0x2C,
-      "0": 0x0B, "1": 0x02, "2": 0x03, "3": 0x04, "4": 0x05,
-      "5": 0x06, "6": 0x07, "7": 0x08, "8": 0x09, "9": 0x0A,
-      " ": 0x39, "\n": 0x1C, "\r": 0x1C,  // Enter
-      "\b": 0x0E,                          // Backspace
-      "ARROW_UP": 0x48,
-      "ARROW_DOWN": 0x50,
-      "ARROW_LEFT": 0x4B,
-      "ARROW_RIGHT": 0x4D
+    // US Keyboard scan code map (Set 1)
+    const scanMap = {
+      // Letters
+      "a": { scan: 0x1E, char: 97 }, "b": { scan: 0x30, char: 98 },
+      "c": { scan: 0x2E, char: 99 }, "d": { scan: 0x20, char: 100 },
+      "e": { scan: 0x12, char: 101 }, "f": { scan: 0x21, char: 102 },
+      "g": { scan: 0x22, char: 103 }, "h": { scan: 0x23, char: 104 },
+      "i": { scan: 0x17, char: 105 }, "j": { scan: 0x24, char: 106 },
+      "k": { scan: 0x25, char: 107 }, "l": { scan: 0x26, char: 108 },
+      "m": { scan: 0x32, char: 109 }, "n": { scan: 0x31, char: 110 },
+      "o": { scan: 0x18, char: 111 }, "p": { scan: 0x19, char: 112 },
+      "q": { scan: 0x10, char: 113 }, "r": { scan: 0x13, char: 114 },
+      "s": { scan: 0x1F, char: 115 }, "t": { scan: 0x14, char: 116 },
+      "u": { scan: 0x16, char: 117 }, "v": { scan: 0x2F, char: 118 },
+      "w": { scan: 0x11, char: 119 }, "x": { scan: 0x2D, char: 120 },
+      "y": { scan: 0x15, char: 121 }, "z": { scan: 0x2C, char: 122 },
+
+      // Numbers
+      "0": { scan: 0x0B, char: 48 }, "1": { scan: 0x02, char: 49 },
+      "2": { scan: 0x03, char: 50 }, "3": { scan: 0x04, char: 51 },
+      "4": { scan: 0x05, char: 52 }, "5": { scan: 0x06, char: 53 },
+      "6": { scan: 0x07, char: 54 }, "7": { scan: 0x08, char: 55 },
+      "8": { scan: 0x09, char: 56 }, "9": { scan: 0x0A, char: 57 },
+
+      // Punctuation
+      "`": { scan: 0x29, char: 96 }, "-": { scan: 0x0C, char: 45 },
+      "=": { scan: 0x0D, char: 61 }, "[": { scan: 0x1A, char: 91 },
+      "]": { scan: 0x1B, char: 93 }, "\\": { scan: 0x2B, char: 92 },
+      ";": { scan: 0x27, char: 59 }, "'": { scan: 0x28, char: 39 },
+      ",": { scan: 0x33, char: 44 }, ".": { scan: 0x34, char: 46 },
+      "/": { scan: 0x35, char: 47 },
+
+      // Controls
+      " ": { scan: 0x39, char: 32 },
+      "Enter": { scan: 0x1C, char: 13 },
+      "Backspace": { scan: 0x0E, char: 8 },
+      "Tab": { scan: 0x0F, char: 9 },
+      "Escape": { scan: 0x01, char: 27 },
+
+      // Arrows
+      "ArrowUp": { scan: 0x48, char: 0 },
+      "ArrowDown": { scan: 0x50, char: 0 },
+      "ArrowLeft": { scan: 0x4B, char: 0 },
+      "ArrowRight": { scan: 0x4D, char: 0 },
+
+      // Function keys
+      "F1": { scan: 0x3B, char: 0 }, "F2": { scan: 0x3C, char: 0 },
+      "F3": { scan: 0x3D, char: 0 }, "F4": { scan: 0x3E, char: 0 },
+      "F5": { scan: 0x3F, char: 0 }, "F6": { scan: 0x40, char: 0 },
+      "F7": { scan: 0x41, char: 0 }, "F8": { scan: 0x42, char: 0 },
+      "F9": { scan: 0x43, char: 0 }, "F10": { scan: 0x44, char: 0 }
     };
 
-    function getScanCode(ch) {
-      if (scanCodes[ch]) return scanCodes[ch];
-      if (scanCodes[ch.toUpperCase()]) return scanCodes[ch.toUpperCase()];
-      return 0;
+    function sendKey(scan, charCode) {
+      if (!ci) return;
+      ci.simulateKeyEvent(scan, charCode, true);
+      ci.simulateKeyEvent(scan, charCode, false);
     }
 
-    // Forward typed characters to DOS
-    nativeInput.addEventListener("input", (e) => {
-      if (!ci) return;
-      const val = e.target.value;
-      if (val.length > 0) {
-        const ch = val.slice(-1);
-        const scan = getScanCode(ch);
-        const charCode = ch.charCodeAt(0);
-        if (scan) {
-          ci.simulateKeyEvent(scan, charCode, true);   // key down
-          ci.simulateKeyEvent(scan, charCode, false);  // key up
-        }
-        e.target.value = "";
-      }
-    });
-
-    // Handle special keys (arrows, backspace, enter) directly
     nativeInput.addEventListener("keydown", (e) => {
       if (!ci) return;
-      let scan = 0, charCode = 0;
+      let key = e.key;
+      let entry = scanMap[key] || scanMap[key.toLowerCase()];
 
-      switch (e.key) {
-        case "Backspace": scan = scanCodes["\b"]; charCode = 8; break;
-        case "Enter":     scan = scanCodes["\n"]; charCode = 13; break;
-        case "ArrowUp":   scan = scanCodes["ARROW_UP"]; break;
-        case "ArrowDown": scan = scanCodes["ARROW_DOWN"]; break;
-        case "ArrowLeft": scan = scanCodes["ARROW_LEFT"]; break;
-        case "ArrowRight":scan = scanCodes["ARROW_RIGHT"]; break;
-      }
-
-      if (scan) {
-        ci.simulateKeyEvent(scan, charCode, true);
-        ci.simulateKeyEvent(scan, charCode, false);
+      if (entry) {
+        sendKey(entry.scan, entry.char);
         e.preventDefault();
       }
     });
