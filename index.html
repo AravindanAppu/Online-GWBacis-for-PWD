@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>GW-BASIC Android</title>
+<title>GW-BASIC Android Keyboard</title>
 <link rel="stylesheet" href="jsdos/js-dos.css">
 <style>
   body, html { margin:0; height:100%; background:#000; display:flex; flex-direction:column; }
@@ -25,10 +25,10 @@ const canvas = document.getElementById("dosbox");
 
 let ci;
 
+// Launch GW-BASIC
 startBtn.addEventListener("click", () => {
-    hiddenInput.focus(); // triggers Android keyboard
-    Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" })
-    .ready((fs, main, control) => {
+    hiddenInput.focus(); // triggers Google keyboard on Android
+    Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" }).ready((fs, main, control) => {
         ci = control;
         fs.extract("basic.zip").then(() => {
             main([
@@ -44,17 +44,35 @@ startBtn.addEventListener("click", () => {
     });
 });
 
-// Forward Android keyboard input to GW-BASIC
+// Map Android input to JS-DOS key events
 hiddenInput.addEventListener("input", e => {
     if(!ci) return;
     const value = hiddenInput.value;
-    for(let char of value) {
-        ci.simulateKeyPress(char.charCodeAt(0));
+    for(let char of value){
+        // Handle uppercase letters with Shift
+        const isUpper = char.toUpperCase() === char && char.toLowerCase() !== char;
+        if(isUpper){
+            ci.sendKeyEvent({type:"keydown", code:"ShiftLeft"});
+        }
+
+        // Map Enter, Backspace, Space
+        let code = char.charCodeAt(0);
+        if(char === "\n") code = 0x0D; // Enter
+        if(char === "\b") code = 0x08; // Backspace
+        if(char === " ") code = 0x20;  // Space
+
+        ci.sendKeyEvent({type:"keydown", key:char, keyCode:code});
+        ci.simulateKeyPress(code);
+        ci.sendKeyEvent({type:"keyup", key:char, keyCode:code});
+
+        if(isUpper){
+            ci.sendKeyEvent({type:"keyup", code:"ShiftLeft"});
+        }
     }
     hiddenInput.value = ""; // reset after sending
 });
 
-// Optional: keep focus on hidden input if user taps canvas
+// Keep hidden input focused if canvas is tapped
 canvas.addEventListener("click", () => hiddenInput.focus());
 </script>
 
