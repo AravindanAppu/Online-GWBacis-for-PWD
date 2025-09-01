@@ -2,78 +2,69 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>GW-BASIC Android Keyboard</title>
+<title>GW-BASIC in Browser</title>
 <link rel="stylesheet" href="jsdos/js-dos.css">
 <style>
   body, html { margin:0; height:100%; background:#000; display:flex; flex-direction:column; }
   #dosbox { flex:1; width:100%; height:100%; display:block; }
-  #startBtn { position:fixed; bottom:10px; left:10px; z-index:1000; padding:10px 20px; font-size:16px; }
-  #hiddenInput { position:absolute; opacity:0; width:1px; height:1px; top:0; left:0; }
 </style>
 </head>
 <body>
 
-<button id="startBtn">Start GW-BASIC</button>
-<input id="hiddenInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 <canvas id="dosbox"></canvas>
 
 <script src="jsdos/js-dos.js"></script>
 <script>
-const startBtn = document.getElementById("startBtn");
-const hiddenInput = document.getElementById("hiddenInput");
 const canvas = document.getElementById("dosbox");
-
 let ci;
 
-// Launch GW-BASIC
-startBtn.addEventListener("click", () => {
-    hiddenInput.focus(); // triggers Google keyboard on Android
-    Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" }).ready((fs, main, control) => {
-        ci = control;
-        fs.extract("basic.zip").then(() => {
-            main([
-                "-c","mount c .",
-                "-c","c:",
-                "-c","cd gwbasic",
-                "-c","gwbasic"
-            ]).then(() => {
-                canvas.focus();
-                console.log("GW-BASIC ready!");
-            });
+Dos(canvas, { wdosboxUrl: "jsdos/wdosbox.js" }).ready((fs, main, control) => {
+    ci = control;
+    fs.extract("basic.zip").then(() => {
+        main([
+            "-c","mount c .",
+            "-c","c:",
+            "-c","cd gwbasic",
+            "-c","gwbasic"
+        ]).then(() => {
+            canvas.focus();
+            console.log("GW-BASIC ready!");
         });
     });
 });
 
-// Map Android input to JS-DOS key events
-hiddenInput.addEventListener("input", e => {
-    if(!ci) return;
-    const value = hiddenInput.value;
-    for(let char of value){
-        // Handle uppercase letters with Shift
-        const isUpper = char.toUpperCase() === char && char.toLowerCase() !== char;
-        if(isUpper){
-            ci.sendKeyEvent({type:"keydown", code:"ShiftLeft"});
-        }
+// On-screen virtual keyboard
+function createKeyboard() {
+    const keys = "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".split("");
+    const keyboard = document.createElement("div");
+    keyboard.style.position = "absolute";
+    keyboard.style.bottom = "0";
+    keyboard.style.left = "0";
+    keyboard.style.width = "100%";
+    keyboard.style.display = "flex";
+    keyboard.style.flexWrap = "wrap";
+    keyboard.style.background = "#222";
+    document.body.appendChild(keyboard);
 
-        // Map Enter, Backspace, Space
-        let code = char.charCodeAt(0);
-        if(char === "\n") code = 0x0D; // Enter
-        if(char === "\b") code = 0x08; // Backspace
-        if(char === " ") code = 0x20;  // Space
+    keys.forEach(k => {
+        const btn = document.createElement("button");
+        btn.textContent = k;
+        btn.style.flex = "1 0 6%";
+        btn.style.margin = "2px";
+        btn.style.padding = "10px";
+        btn.style.fontSize = "16px";
+        btn.addEventListener("click", () => {
+            if(!ci) return;
+            const code = k.charCodeAt(0);
+            ci.sendKeyEvent({type:"keydown", key:k, keyCode:code});
+            ci.simulateKeyPress(code);
+            ci.sendKeyEvent({type:"keyup", key:k, keyCode:code});
+        });
+        keyboard.appendChild(btn);
+    });
+}
 
-        ci.sendKeyEvent({type:"keydown", key:char, keyCode:code});
-        ci.simulateKeyPress(code);
-        ci.sendKeyEvent({type:"keyup", key:char, keyCode:code});
-
-        if(isUpper){
-            ci.sendKeyEvent({type:"keyup", code:"ShiftLeft"});
-        }
-    }
-    hiddenInput.value = ""; // reset after sending
-});
-
-// Keep hidden input focused if canvas is tapped
-canvas.addEventListener("click", () => hiddenInput.focus());
+createKeyboard();
 </script>
 
 </body>
