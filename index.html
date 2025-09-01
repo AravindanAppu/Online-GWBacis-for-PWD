@@ -60,57 +60,18 @@
       });
     });
 
-    // Special key mapping (ASCII/control values expected by DOSBox)
-    const specialMap = {
-      "Backspace": 8,
-      "Tab": 9,
-      "Enter": 13,
-      "Escape": 27,
-      " ": 32,
-
-      "ArrowLeft": 0x4B,
-      "ArrowRight": 0x4D,
-      "ArrowUp": 0x48,
-      "ArrowDown": 0x50,
-
-      "Insert": 0x52,
-      "Delete": 0x53,
-      "Home": 0x47,
-      "End": 0x4F,
-      "PageUp": 0x49,
-      "PageDown": 0x51,
-
-      "F1": 0x3B,
-      "F2": 0x3C,
-      "F3": 0x3D,
-      "F4": 0x3E,
-      "F5": 0x3F,
-      "F6": 0x40,
-      "F7": 0x41,
-      "F8": 0x42,
-      "F9": 0x43,
-      "F10": 0x44
-    };
-
-    // Send keys into DOSBox
-    nativeInput.addEventListener("keydown", (e) => {
+    // Forward mobile keyboard characters
+    nativeInput.addEventListener("input", (e) => {
       if (!ci) return;
-      let code = null;
-
-      if (specialMap[e.key]) {
-        code = specialMap[e.key];
-      } else if (e.key.length === 1) {
-        // Normal characters
-        code = e.key.charCodeAt(0);
-      }
-
-      if (code !== null) {
-        ci.simulateKeyPress(code);
-        e.preventDefault();
+      const val = e.target.value;
+      if (val.length > 0) {
+        const ch = val.slice(-1);
+        ci.simulateKeyPress(ch.charCodeAt(0));
+        e.target.value = "";
       }
     });
 
-    // Keep focus when tapping canvas
+    // Refocus on canvas tap
     dosRoot.addEventListener("click", () => {
       nativeInput.focus();
     });
