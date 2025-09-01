@@ -51,8 +51,7 @@
         main([
           "-c", "mount d .",
           "-c", "d:",
-          "-c", "cd gwbasic",
-          "-c", "gwbasic",
+          "-c", "gwbasic"
         ]).then((client) => {
           ci = client;
           nativeInput.focus();
@@ -60,16 +59,13 @@
       });
     });
 
-    // Forward mobile keyboard characters properly
+    // Forward mobile keyboard characters
     nativeInput.addEventListener("input", (e) => {
       if (!ci) return;
       const val = e.target.value;
       if (val.length > 0) {
         const ch = val.slice(-1);
-        const code = ch.charCodeAt(0);
-        // keydown + keyup
-        ci.sendKeyEvent(code, true);
-        ci.sendKeyEvent(code, false);
+        ci.simulateKeyPress(ch.charCodeAt(0));
         e.target.value = "";
       }
     });
