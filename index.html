@@ -6,74 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <style>
-    body {
-      background: black;
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      font-family: 'Courier New', monospace;
-    }
-    #screen-container {
-      width: 100vw;
-      height: 45vh;
-    }
-    #dos-root {
-      width: 100%;
-      height: 100%;
-      border: 2px solid #666;
-    }
-    #keyboard-container {
-      width: 100vw;
-      height: 50vh;
-      background: #333;
-      display: flex;
-      flex-direction: column;
-      padding: 6px;
-      padding-bottom: env(safe-area-inset-bottom);
-      box-sizing: border-box;
-      gap: 4px;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-    }
-    .key-row {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      gap: 4px;
-    }
-    .key {
-      background: #444;
-      color: white;
-      font-size: 1.1em;
-      font-weight: bold;
-      text-align: center;
-      border-radius: 6px;
-      flex: 1;
-      min-width: 32px;
-      padding: 10px 0;
-      cursor: pointer;
-      user-select: none;
-    }
-    .key:active {
-      background: #777;
-      transform: translateY(1px);
-    }
-    .special {
-      flex: 1.5;
-      background: #4a3c1c;
-    }
-    .wide {
-      flex: 3;
-    }
-    .fkey {
-      font-size: 0.8em;
-      font-weight: normal;
-    }
-    .shift-active {
-      background: #c96 !important;
-    }
+    body { background: black; margin: 0; height: 100vh; display: flex; flex-direction: column; font-family: 'Courier New', monospace; }
+    #screen-container { width: 100vw; height: 45vh; }
+    #dos-root { width: 100%; height: 100%; border: 2px solid #666; }
+    #keyboard-container { width: 100vw; height: 50vh; background: #333; display: flex; flex-direction: column; padding: 6px; padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box; gap: 4px; position: fixed; bottom: 0; left: 0; }
+    .key-row { display: flex; flex-direction: row; justify-content: center; gap: 4px; }
+    .key { background: #444; color: white; font-size: 1.1em; font-weight: bold; text-align: center; border-radius: 6px; flex: 1; min-width: 32px; padding: 10px 0; cursor: pointer; user-select: none; }
+    .key:active { background: #777; transform: translateY(1px); }
+    .special { flex: 1.5; background: #4a3c1c; }
+    .wide { flex: 3; }
+    .fkey { font-size: 0.8em; font-weight: normal; }
+    .shift-active { background: #c96 !important; }
   </style>
 </head>
 <body>
@@ -82,7 +25,6 @@
   </div>
 
   <div id="keyboard-container">
-    <!-- Function keys -->
     <div class="key-row">
       <div class="key fkey" onclick="pressKey(112)">F1</div>
       <div class="key fkey" onclick="pressKey(113)">F2</div>
@@ -95,7 +37,6 @@
       <div class="key fkey" onclick="pressKey(120)">F9</div>
       <div class="key fkey" onclick="pressKey(121)">F10</div>
     </div>
-    <!-- Numbers row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(49)">1</div>
       <div class="key" onclick="pressKey(50)">2</div>
@@ -108,7 +49,6 @@
       <div class="key" onclick="pressKey(57)">9</div>
       <div class="key" onclick="pressKey(48)">0</div>
     </div>
-    <!-- QWERTY row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(81)">Q</div>
       <div class="key" onclick="pressKey(87)">W</div>
@@ -121,7 +61,6 @@
       <div class="key" onclick="pressKey(79)">O</div>
       <div class="key" onclick="pressKey(80)">P</div>
     </div>
-    <!-- ASDF row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(65)">A</div>
       <div class="key" onclick="pressKey(83)">S</div>
@@ -134,7 +73,6 @@
       <div class="key" onclick="pressKey(76)">L</div>
       <div class="key special" onclick="pressKey(13)">⏎</div>
     </div>
-    <!-- ZXCV row -->
     <div class="key-row">
       <div id="shift-key" class="key special" onclick="toggleShift()">⇧</div>
       <div class="key" onclick="pressKey(90)">Z</div>
@@ -146,7 +84,6 @@
       <div class="key" onclick="pressKey(77)">M</div>
       <div class="key special" onclick="pressKey(8)">⌫</div>
     </div>
-    <!-- Space + symbols -->
     <div class="key-row">
       <div class="key" onclick="pressKey(190)">.</div>
       <div class="key" onclick="pressKey(188)">,</div>
@@ -163,29 +100,36 @@
     const dosRoot = document.getElementById("dos-root");
     let ci = null;
     let shiftActive = false;
+    let audioContext = null;
 
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
       fs.extract("basic.zip").then(() => {
         main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
-          .then(client => ci = client);
+          .then(client => {
+            ci = client;
+            audioContext = ci.audioContext;
+
+            ["click", "touchstart"].forEach(evt => {
+              document.addEventListener(evt, () => {
+                if (audioContext.state === "suspended") audioContext.resume();
+              }, { once: true });
+            });
+          });
       });
     });
 
     function simulateKeyEvent(keyCode, pressed) {
       const eventType = pressed ? "keydown" : "keyup";
       const event = document.createEvent("KeyboardEvent");
-
       if (event.initKeyboardEvent) {
         event.initKeyboardEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
       } else {
         event.initKeyEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
       }
-
       Object.defineProperty(event, "keyCode", { get: () => keyCode });
       Object.defineProperty(event, "which", { get: () => keyCode });
-
       document.dispatchEvent(event);
     }
 
@@ -195,86 +139,29 @@
     }
 
     function pressKey(code) {
+      if (!ci) return;
+
+      const shiftedMap = {
+        49: 33,50: 64,51: 35,52: 36,53: 37,54: 94,55: 38,56: 42,57: 40,48: 41,
+        186: 58,222: 34,188: 60,190: 62,191: 63,189: 95,187: 43
+      };
+
       if (shiftActive) {
-        const shiftedMap = {
-          49: 33, 50: 64, 51: 35, 52: 36, 53: 37,
-          54: 94, 55: 38, 56: 42, 57: 40, 48: 41,
-          186: 58, 222: 34, 188: 60, 190: 62, 191: 63,
-          189: 95, 187: 43
-        };
         if (code >= 65 && code <= 90) {
-          simulateKeyEvent(code, true);
-          simulateKeyEvent(code, false);
+          ci.simulateKeyPress(code);
         } else if (shiftedMap[code]) {
-          simulateKeyEvent(shiftedMap[code], true);
-          simulateKeyEvent(shiftedMap[code], false);
+          ci.simulateKeyPress(shiftedMap[code]);
         } else {
-          simulateKeyEvent(code, true);
-          simulateKeyEvent(code, false);
+          ci.simulateKeyPress(code);
         }
         shiftActive = false;
         document.getElementById("shift-key").classList.remove("shift-active");
       } else {
-        simulateKeyEvent(code, true);
-        simulateKeyEvent(code, false);
+        ci.simulateKeyPress(code);
       }
 
       if (navigator.vibrate) navigator.vibrate(20);
     }
-
-let audioContext;
-
-// Create and resume the AudioContext only after a user gesture
-function initAudio() {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    SDL.audioContext = audioContext; // make sure SDL sees it
-  }
-  if (audioContext.state === "suspended") {
-    audioContext.resume().then(() => {
-      console.log("✅ AudioContext resumed successfully");
-    });
-  }
-}
-
-// Attach gesture listeners (cover both desktop + mobile)
-["click", "touchstart"].forEach(evt => {
-  document.addEventListener(evt, initAudio, { once: true });
-});
-
-// Patch SDL audio
-SDL.audio.pushAudio = function (ptr, size) {
-  if (!SDL.audioContext) return;
-
-  if (SDL.audioContext.state === "suspended") {
-    console.log("⚠️ AudioContext suspended. Waiting for user interaction.");
-    return;
-  }
-
-  try {
-    // Existing js-dos SDL push logic
-    const data = SDL.audio.mixBuffer(ptr, size);
-    const buffer = SDL.audioContext.createBuffer(2, data[0].length, SDL.audioContext.sampleRate);
-
-    buffer.getChannelData(0).set(data[0]);
-    buffer.getChannelData(1).set(data[1]);
-
-    const source = SDL.audioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(SDL.audioContext.destination);
-
-    const playtime = Math.max(SDL.audioContext.currentTime, SDL.audio.nextPlayTime || 0);
-    if (typeof source.start !== "undefined") {
-      source.start(playtime);
-    } else if (typeof source.noteOn !== "undefined") {
-      source.noteOn(playtime);
-    }
-
-    SDL.audio.nextPlayTime = playtime + SDL.audio.bufferDurationSecs;
-  } catch (e) {
-    console.log("❌ Web Audio API error: " + e.toString());
-  }
-};
   </script>
 </body>
 </html>
