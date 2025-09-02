@@ -1,275 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>GW-BASIC in Browser — Virtual Keyboard</title>
-  <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-  <style>
-    :root {
-      --bg: #000;
-      --frame: #555;
-      --key: #3e3e3e;
-      --key-hover: #505050;
-      --key-active: #6b6b6b;
-      --key-text: #fff;
-      --special: #2d2c3b;
-      --special-on: #6b3df2;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Courier New", monospace;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    #screen-container {
-      width: 100vw;
-      height: 46vh;
-      padding: 6px;
-    }
-    #dos-root {
-      width: 100%;
-      height: 100%;
-      border: 2px solid var(--frame);
-      display: block;
-      background: #000;
-    }
-
-    /* Keyboard */
-    #keyboard {
-      width: 100vw;
-      height: 52vh; /* leave tiny space for notches */
-      padding: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      background: #202020;
-    }
-    .row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
-
-    .key {
-      height: 48px;
-      background: var(--key);
-      color: var(--key-text);
-      border: none;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.05rem;
-      font-weight: 600;
-      line-height: 1;
-      letter-spacing: .2px;
-      box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 2px 6px rgba(0,0,0,.4);
-      transition: transform .04s ease, background .12s ease;
-      touch-action: manipulation;
-    }
-    .key:hover { background: var(--key-hover); }
-    .key:active { background: var(--key-active); transform: translateY(1px); }
-
-    .key.special { background: var(--special); }
-    .key.special:hover { background: #3a3950; }
-    .key.shift.active { background: var(--special-on); }
-
-    /* widths */
-    .w-1_5 { grid-column: span 1; }
-    .w-2   { grid-column: span 2; }
-    .w-3   { grid-column: span 3; }
-    .w-4   { grid-column: span 4; }
-
-    /* F-keys are compact */
-    .row.fkeys .key { height: 40px; font-size: .9rem; font-weight: 500; }
-    .row.space { grid-template-columns: 1fr 1fr 3fr 1fr 1fr 1fr 1fr; }
-
-    /* Responsive tweaks */
-    @media (min-width: 768px) {
-      .key { height: 52px; font-size: 1.1rem; }
-      .row.fkeys .key { height: 42px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>GW-BASIC Virtual Keyboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+<style>
+body {
+  background: black;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Courier New', monospace;
+}
+#screen-container {
+  width: 100vw;
+  height: 45vh;
+}
+#dos-root {
+  width: 100%;
+  height: 100%;
+  border: 2px solid #666;
+}
+#keyboard-container {
+  width: 100vw;
+  height: 50vh;
+  background: #333;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  box-sizing: border-box;
+  gap: 4px;
+}
+.key-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 4px;
+}
+.key {
+  background: #444;
+  color: white;
+  font-size: 1.2em;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 32px;
+  padding: 10px 0;
+  cursor: pointer;
+  user-select: none;
+}
+.key:active {
+  background: #777;
+  transform: translateY(1px);
+}
+.special {
+  flex: 1.5;
+  background: #4a3c1c;
+}
+.wide {
+  flex: 3;
+}
+.shift {
+  background: #220022;
+}
+.symbol {
+  background: #3c1361;
+}
+.fkey {
+  font-size: 0.8em;
+  font-weight: normal;
+}
+</style>
 </head>
 <body>
-  <div id="screen-container">
-    <canvas id="dos-root"></canvas>
+<div id="screen-container">
+  <canvas id="dos-root"></canvas>
+</div>
+
+<div id="keyboard-container">
+
+  <!-- Function keys -->
+  <div class="key-row">
+    <div class="key fkey" onclick="sendKeys(112)">F1</div>
+    <div class="key fkey" onclick="sendKeys(113)">F2</div>
+    <div class="key fkey" onclick="sendKeys(114)">F3</div>
+    <div class="key fkey" onclick="sendKeys(115)">F4</div>
+    <div class="key fkey" onclick="sendKeys(116)">F5</div>
+    <div class="key fkey" onclick="sendKeys(117)">F6</div>
+    <div class="key fkey" onclick="sendKeys(118)">F7</div>
+    <div class="key fkey" onclick="sendKeys(119)">F8</div>
+    <div class="key fkey" onclick="sendKeys(120)">F9</div>
+    <div class="key fkey" onclick="sendKeys(121)">F10</div>
   </div>
 
-  <div id="keyboard"></div>
+  <!-- Numbers -->
+  <div class="key-row">
+    <div class="key" onclick="sendKeys(49)">1</div>
+    <div class="key" onclick="sendKeys(50)">2</div>
+    <div class="key" onclick="sendKeys(51)">3</div>
+    <div class="key" onclick="sendKeys(52)">4</div>
+    <div class="key" onclick="sendKeys(53)">5</div>
+    <div class="key" onclick="sendKeys(54)">6</div>
+    <div class="key" onclick="sendKeys(55)">7</div>
+    <div class="key" onclick="sendKeys(56)">8</div>
+    <div class="key" onclick="sendKeys(57)">9</div>
+    <div class="key" onclick="sendKeys(48)">0</div>
+  </div>
 
-  <script>
-    const screen = document.getElementById('dos-root');
-    const keyboard = document.getElementById('keyboard');
+  <!-- QWERTY row -->
+  <div class="key-row">
+    <div class="key" onclick="sendKeys(81)">Q</div>
+    <div class="key" onclick="sendKeys(87)">W</div>
+    <div class="key" onclick="sendKeys(69)">E</div>
+    <div class="key" onclick="sendKeys(82)">R</div>
+    <div class="key" onclick="sendKeys(84)">T</div>
+    <div class="key" onclick="sendKeys(89)">Y</div>
+    <div class="key" onclick="sendKeys(85)">U</div>
+    <div class="key" onclick="sendKeys(73)">I</div>
+    <div class="key" onclick="sendKeys(79)">O</div>
+    <div class="key" onclick="sendKeys(80)">P</div>
+  </div>
 
-    let ci = null;
-    let shiftOn = false;           // sticky/latching Shift
-    const oneShotShift = true;     // auto-release after a key
+  <!-- ASDF row -->
+  <div class="key-row">
+    <div class="key" onclick="sendKeys(65)">A</div>
+    <div class="key" onclick="sendKeys(83)">S</div>
+    <div class="key" onclick="sendKeys(68)">D</div>
+    <div class="key" onclick="sendKeys(70)">F</div>
+    <div class="key" onclick="sendKeys(71)">G</div>
+    <div class="key" onclick="sendKeys(72)">H</div>
+    <div class="key" onclick="sendKeys(74)">J</div>
+    <div class="key" onclick="sendKeys(75)">K</div>
+    <div class="key" onclick="sendKeys(76)">L</div>
+    <div class="key special" onclick="sendKeys(13)">ENTER</div>
+  </div>
 
-    // Start js-dos & GW-BASIC
-    Dos(screen, { wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js' })
-      .ready((fs, main) => {
-        fs.extract('basic.zip').then(() => {
-          return main([
-            '-c', 'mount d .',
-            '-c', 'd:',
-            '-c', 'cd gwbasic',
-            '-c', 'gwbasic'
-          ]);
-        }).then((client) => { ci = client; });
-      });
+  <!-- ZXCV row -->
+  <div class="key-row">
+    <div class="key shift" onclick="toggleShift()" id="shift-btn">SHIFT</div>
+    <div class="key" onclick="sendKeys(90)">Z</div>
+    <div class="key" onclick="sendKeys(88)">X</div>
+    <div class="key" onclick="sendKeys(67)">C</div>
+    <div class="key" onclick="sendKeys(86)">V</div>
+    <div class="key" onclick="sendKeys(66)">B</div>
+    <div class="key" onclick="sendKeys(78)">N</div>
+    <div class="key" onclick="sendKeys(77)">M</div>
+    <div class="key special" onclick="sendKeys(8)">DEL</div>
+  </div>
 
-    // Helper: robust key press (supports combos like Shift+X)
-    function pressKeys(...codes) {
-      if (!ci) return;
-      try {
-        if (typeof ci.simulateKeyPress === 'function') {
-          ci.simulateKeyPress(...codes);
-        } else if (typeof ci.sendKeyEvent === 'function') {
-          // Press all, then release in reverse
-          codes.forEach(code => ci.sendKeyEvent(code, true));
-          for (let i = codes.length - 1; i >= 0; i--) ci.sendKeyEvent(codes[i], false);
-        }
-      } catch (_) { /* swallow */ }
-    }
+  <!-- Space row -->
+  <div class="key-row">
+    <div class="key wide special" onclick="sendKeys(32)">SPACE</div>
+  </div>
 
-    // Haptics (Android Chrome / supported devices)
-    function haptic(ms = 12) { if (navigator.vibrate) navigator.vibrate(ms); }
+</div>
 
-    // Layout definition (DOM keyCode values)
-    // For printable keys, we always send base keyCode; when Shift is active we send combo [16, base]
-    const K = {
-      ESC: 27, BKSP: 8, TAB: 9, ENTER: 13, SPACE: 32, SHIFT: 16,
-      LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40,
-      DASH: 189, EQUAL: 187, TICK: 192, LBR: 219, RBR: 221, BSL: 220,
-      SEMI: 186, QUOT: 222, COMMA: 188, DOT: 190, SLASH: 191,
-    };
+<script>
+const dosRoot = document.getElementById("dos-root");
+let ci = null;
+let shiftOn = false;
 
-    const fkeys = Array.from({ length: 12 }, (_, i) => ({ label: 'F' + (i+1), code: 112 + i, classes: 'special' }));
+// Shift symbol mapping
+const shiftedMap = {
+  49: "!", 50: "@", 51: "#", 52: "$", 53: "%",
+  54: "^", 55: "&", 56: "*", 57: "(", 48: ")",
+  186: ":", 222: "\"", 188: "<", 190: ">", 191: "?"
+};
 
-    const row1 = [
-      { label: '`', shiftLabel: '~', code: K.TICK, shiftable: true },
-      { label: '1', shiftLabel: '!', code: 49, shiftable: true },
-      { label: '2', shiftLabel: '@', code: 50, shiftable: true },
-      { label: '3', shiftLabel: '#', code: 51, shiftable: true },
-      { label: '4', shiftLabel: '$', code: 52, shiftable: true },
-      { label: '5', shiftLabel: '%', code: 53, shiftable: true },
-      { label: '6', shiftLabel: '^', code: 54, shiftable: true },
-      { label: '7', shiftLabel: '&', code: 55, shiftable: true },
-      { label: '8', shiftLabel: '*', code: 56, shiftable: true },
-      { label: '9', shiftLabel: '(', code: 57, shiftable: true },
-      { label: '0', shiftLabel: ')', code: 48, shiftable: true },
-      { label: '-', shiftLabel: '_', code: K.DASH, shiftable: true },
-      { label: '=', shiftLabel: '+', code: K.EQUAL, shiftable: true },
-      { label: '⌫', code: K.BKSP, classes: 'special w-2' },
-    ];
+Dos(dosRoot, {
+  wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+}).ready((fs, main) => {
+  fs.extract("basic.zip").then(() => {
+    main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
+      .then(client => ci = client);
+  });
+});
 
-    const letters = (start, end) => Array
-      .from({ length: end.charCodeAt(0) - start.charCodeAt(0) + 1 }, (_, i) => {
-        const ch = String.fromCharCode(start.charCodeAt(0) + i);
-        return { label: ch, shiftLabel: ch.toUpperCase(), code: ch.toUpperCase().charCodeAt(0), shiftable: true };
-      });
+function toggleShift(){
+  shiftOn = !shiftOn;
+  document.getElementById("shift-btn").textContent = shiftOn ? "SHIFT ON" : "SHIFT";
+}
 
-    const row2 = [
-      { label: 'TAB', code: K.TAB, classes: 'special w-2' },
-      ...letters('q', 'p'),
-      { label: '[', shiftLabel: '{', code: K.LBR, shiftable: true },
-      { label: ']', shiftLabel: '}', code: K.RBR, shiftable: true },
-      { label: '\\', shiftLabel: '|', code: K.BSL, shiftable: true },
-    ];
+function sendKeys(code){
+  if(!ci) return;
 
-    const row3 = [
-      { label: 'SHIFT', code: K.SHIFT, classes: 'special shift w-2' },
-      ...letters('a', 'l'),
-      { label: ';', shiftLabel: ':', code: K.SEMI, shiftable: true },
-      { label: "'", shiftLabel: '"', code: K.QUOT, shiftable: true }, // SHIFT + ' => "
-      { label: 'ENTER', code: K.ENTER, classes: 'special w-2' },
-    ];
+  // Handle shifted characters
+  if (shiftOn) {
+    ci.simulateKeyEvent({type: "keydown", code: 16}); // Shift down
+    ci.simulateKeyPress(code);
+    ci.simulateKeyEvent({type: "keyup", code: 16});   // Shift up
+    shiftOn = false;
+    document.getElementById("shift-btn").textContent = "SHIFT";
+  } else {
+    ci.simulateKeyPress(code);
+  }
 
-    const row4 = [
-      { label: '◄', code: K.LEFT, classes: 'special' },
-      { label: '▲', code: K.UP, classes: 'special' },
-      { label: '▼', code: K.DOWN, classes: 'special' },
-      { label: '►', code: K.RIGHT, classes: 'special' },
-      { label: ',', shiftLabel: '<', code: K.COMMA, shiftable: true },
-      { label: '.', shiftLabel: '>', code: K.DOT, shiftable: true },
-      { label: '/', shiftLabel: '?', code: K.SLASH, shiftable: true },
-      { label: 'SPACE', code: K.SPACE, classes: 'special w-4' },
-    ];
-
-    function buildRow(keys, extraClass = '') {
-      const row = document.createElement('div');
-      row.className = `row ${extraClass}`.trim();
-      keys.forEach(k => row.appendChild(makeKey(k)));
-      return row;
-    }
-
-    function makeKey(def) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `key ${def.classes || ''}`.trim();
-      btn.dataset.code = String(def.code);
-      if (def.shiftable) btn.dataset.shiftable = '1';
-      if (def.shiftLabel) btn.dataset.shiftLabel = def.shiftLabel;
-      btn.dataset.label = def.label;
-      btn.textContent = shiftOn && def.shiftLabel ? def.shiftLabel : def.label;
-
-      // Pointer handlers (mouse/touch)
-      const fire = () => handleKey(def);
-      btn.addEventListener('click', fire);
-      btn.addEventListener('touchstart', (e) => { e.preventDefault(); fire(); }, { passive: false });
-      return btn;
-    }
-
-    function handleKey(def) {
-      // Focus DOS canvas to keep input routed there
-      screen.focus();
-
-      if (def.code === K.SHIFT) {
-        shiftOn = !shiftOn;
-        updateShiftVisual();
-        haptic(8);
-        return;
-      }
-
-      const useShift = shiftOn && def.shiftable === true;
-      if (useShift) pressKeys(K.SHIFT, def.code); else pressKeys(def.code);
-      haptic(12);
-
-      if (shiftOn && oneShotShift && def.code !== K.SHIFT) {
-        shiftOn = false;
-        updateShiftVisual();
-      }
-    }
-
-    function updateShiftVisual() {
-      // Change key captions and shift button style
-      keyboard.querySelectorAll('.key').forEach(btn => {
-        const shiftable = btn.dataset.shiftable === '1';
-        const lbl = btn.dataset.label;
-        const slbl = btn.dataset.shiftLabel;
-        if (shiftable && slbl) btn.textContent = shiftOn ? slbl : lbl;
-        // mark shift key
-        if (parseInt(btn.dataset.code, 10) === K.SHIFT) {
-          btn.classList.toggle('active', shiftOn);
-          btn.textContent = shiftOn ? 'SHIFT ⬆' : 'SHIFT';
-        }
-      });
-    }
-
-    // Build keyboard DOM
-    keyboard.appendChild(buildRow(fkeys, 'fkeys'));
-    keyboard.appendChild(buildRow(row1));
-    keyboard.appendChild(buildRow(row2));
-    keyboard.appendChild(buildRow(row3));
-    keyboard.appendChild(buildRow(row4, 'space'));
-
-    // Keep canvas focused when tapping keyboard background
-    keyboard.addEventListener('click', () => screen.focus());
-  </script>
+  // haptic feedback
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+</script>
 </body>
 </html>
