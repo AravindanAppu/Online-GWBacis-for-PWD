@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>GW-BASIC in Browser</title>
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
@@ -12,133 +12,102 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       height: 100vh;
-      overflow: hidden;
     }
     #dos-root {
       width: 100vw;
       height: 60vh;
       border: 2px solid #666;
     }
-    #native-input {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      font-size: 16px; /* prevent zoom */
-      border: none;
-      background: transparent;
+    #keyboard {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      width: 95vw;
+    }
+    .key {
+      background: #222;
+      color: #eee;
+      border: 1px solid #666;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      font-size: 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .key:active {
+      background: #444;
     }
   </style>
 </head>
 <body>
   <canvas id="dos-root"></canvas>
-  <input type="text" id="native-input" autofocus />
+  <div id="keyboard"></div>
 
   <script>
     const dosRoot = document.getElementById("dos-root");
-    const nativeInput = document.getElementById("native-input");
+    const keyboardDiv = document.getElementById("keyboard");
     let ci = null;
 
-    Dos(dosRoot, {
-      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
-    }).ready((fs, main) => {
-      fs.extract("basic.zip").then(() => {
-        main([
-          "-c", "mount d .",
-          "-c", "d:",
-          "-c", "cd gwbasic",
-          "-c", "gwbasic"
-        ]).then((client) => {
-          ci = client;
-          nativeInput.focus();
+    // Start DOS + GW-BASIC
+    Dos(dosRoot, { wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js" })
+      .ready((fs, main) => {
+        fs.extract("basic.zip").then(() => {
+          main([
+            "-c", "mount d .",
+            "-c", "d:",
+            "-c", "cd gwbasic",
+            "-c", "gwbasic"
+          ]).then(client => ci = client);
         });
       });
+
+    // Keys to render
+    const keys = [
+      ..."1234567890",
+      ..."QWERTYUIOP",
+      ..."ASDFGHJKL",
+      ..."ZXCVBNM",
+      " ", "ENTER", "BKSP"
+    ];
+
+    // Base scan codes (subset)
+    const scans = {
+      'A':0x1E,'B':0x30,'C':0x2E,'D':0x20,'E':0x12,'F':0x21,'G':0x22,'H':0x23,
+      'I':0x17,'J':0x24,'K':0x25,'L':0x26,'M':0x32,'N':0x31,'O':0x18,'P':0x19,
+      'Q':0x10,'R':0x13,'S':0x1F,'T':0x14,'U':0x16,'V':0x2F,'W':0x11,'X':0x2D,
+      'Y':0x15,'Z':0x2C,
+      '1':0x02,'2':0x03,'3':0x04,'4':0x05,'5':0x06,
+      '6':0x07,'7':0x08,'8':0x09,'9':0x0A,'0':0x0B,
+      ' ':0x39,'ENTER':0x1C,'BKSP':0x0E
+    };
+
+    // Render keyboard
+    keys.forEach(k => {
+      const btn = document.createElement("div");
+      btn.className = "key";
+      btn.textContent = (k===" "?"SPACE":k);
+      btn.onclick = () => sendKey(k);
+      keyboardDiv.appendChild(btn);
     });
 
-    // Base scan codes (subset, US layout)
-    const baseScans = {
-      'a': 0x1E, 'b': 0x30, 'c': 0x2E, 'd': 0x20,
-      'e': 0x12, 'f': 0x21, 'g': 0x22, 'h': 0x23,
-      'i': 0x17, 'j': 0x24, 'k': 0x25, 'l': 0x26,
-      'm': 0x32, 'n': 0x31, 'o': 0x18, 'p': 0x19,
-      'q': 0x10, 'r': 0x13, 's': 0x1F, 't': 0x14,
-      'u': 0x16, 'v': 0x2F, 'w': 0x11, 'x': 0x2D,
-      'y': 0x15, 'z': 0x2C,
-      '0': 0x0B, '1': 0x02, '2': 0x03, '3': 0x04,
-      '4': 0x05, '5': 0x06, '6': 0x07, '7': 0x08,
-      '8': 0x09, '9': 0x0A,
-      ' ': 0x39, '\n': 0x1C, '\r': 0x1C, '\b': 0x0E,
-      ',': 0x33, '.': 0x34, '/': 0x35, ';': 0x27,
-      "'": 0x28, '[': 0x1A, ']': 0x1B, '\\': 0x2B,
-      '-': 0x0C, '=': 0x0D, '`': 0x29
-    };
-
-    // Full character map
-    const charMap = {};
-
-    // Letters (lower and upper)
-    for (const [ch, scan] of Object.entries(baseScans)) {
-      if (ch >= 'a' && ch <= 'z') {
-        charMap[ch] = { scan, char: ch.charCodeAt(0), shift: false };
-        const up = ch.toUpperCase();
-        charMap[up] = { scan, char: up.charCodeAt(0), shift: true };
-      }
-    }
-
-    // Digits and shifted symbols
-    const digitShift = { '1':'!', '2':'@', '3':'#', '4':'$', '5':'%',
-                         '6':'^', '7':'&', '8':'*', '9':'(', '0':')' };
-    for (const [d, sym] of Object.entries(digitShift)) {
-      const scan = baseScans[d];
-      charMap[d] = { scan, char: d.charCodeAt(0), shift: false };
-      charMap[sym] = { scan, char: sym.charCodeAt(0), shift: true };
-    }
-
-    // Punctuation
-    const punct = {
-      '-':'_', '=':'+', '`':'~',
-      '[':'{', ']':'}', '\\':'|',
-      ';':':', "'":'"', ',':'<', '.':'>', '/':'?'
-    };
-    for (const [k,v] of Object.entries(punct)) {
-      const scan = baseScans[k];
-      if (scan) {
-        charMap[k] = { scan, char: k.charCodeAt(0), shift:false };
-        charMap[v] = { scan, char: v.charCodeAt(0), shift:true };
-      }
-    }
-
-    // Space, Enter, Backspace
-    charMap[' '] = { scan: baseScans[' '], char: 32, shift:false };
-    charMap['\n'] = { scan: baseScans['\n'], char: 13, shift:false };
-    charMap['\r'] = { scan: baseScans['\r'], char: 13, shift:false };
-    charMap['\b'] = { scan: baseScans['\b'], char: 8, shift:false };
-
-    // Forward mobile keyboard input
-    nativeInput.addEventListener("input", (e) => {
+    function sendKey(k) {
       if (!ci) return;
-      const val = e.target.value;
-      if (val.length > 0) {
-        const ch = val.slice(-1);
-        const map = charMap[ch];
-        if (map) {
-          if (map.shift) ci.simulateKeyEvent(0x2A, 0, true); // shift down
-          ci.simulateKeyEvent(map.scan, map.char, true);   // key down
-          ci.simulateKeyEvent(map.scan, map.char, false);  // key up
-          if (map.shift) ci.simulateKeyEvent(0x2A, 0, false); // shift up
-        }
-        e.target.value = "";
-      }
-    });
+      let scan = scans[k];
+      let code = (k==="ENTER") ? 13 :
+                 (k==="BKSP") ? 8 :
+                 (k===" ") ? 32 : k.charCodeAt(0);
 
-    // Keep focus on input
-    dosRoot.addEventListener("click", () => {
-      nativeInput.focus();
-    });
+      if (!scan) return;
+
+      // key down
+      ci.simulateKeyEvent(scan, code, true);
+      // key up
+      ci.simulateKeyEvent(scan, code, false);
+    }
   </script>
 </body>
 </html>
