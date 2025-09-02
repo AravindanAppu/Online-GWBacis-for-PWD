@@ -1,245 +1,185 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GW-BASIC w/ Android-Style Virtual Keyboard</title>
+<title>GW-BASIC Virtual Keyboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
 <style>
 body {
- background: black;
- margin:0;
- height:100vh;
- overflow: hidden;
- padding:0;
- font-family: 'Courier New', monospace;
- }
+  background: black;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Courier New', monospace;
+}
 #screen-container {
- width:100vw;
- height:45vh;
- position: relative;
- }
+  width: 100vw;
+  height: 45vh;
+}
 #dos-root {
- width:100%;
- height:100%;
- border:2px solid #666;
- }
+  width: 100%;
+  height: 100%;
+  border: 2px solid #666;
+}
 #keyboard-container {
- width:100vw;
- height:46vh;
- background: #333;
- display: grid;
- grid-template-columns: repeat(10,1fr);
- grid-gap:2px;
- padding:2px;
- box-sizing: border-box;
- }
+  width: 100vw;
+  height: 50vh;
+  background: #333;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  box-sizing: border-box;
+  gap: 4px;
+}
+.key-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 4px;
+}
 .key {
- background: #444;
- color: white; /* Brighter text like Android */
- font-size:1.3em;
- font-weight: bold;
- text-align: center;
- border:none; /* No borders for cleaner look */
- border-radius:4px;
- display: flex;
- align-items: center;
- justify-content: center;
- cursor: pointer;
- min-height:40px; /* Consistent size */
- transition: all0.1s;
- }
-.key:hover {
- background: #555 !important;
- }
+  background: #444;
+  color: white;
+  font-size: 1.2em;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 32px;
+  padding: 10px 0;
+  cursor: pointer;
+  user-select: none;
+}
 .key:active {
- background: #777 !important;
- transform: translateY(1px);
- }
-#fkeys-holder {
- display: flex;
- flex-direction: row;
- flex-wrap: wrap;
- gap:2px;
- }
-#key-space {
- grid-column: span6;
- }
-#key-return {
- grid-column: span2;
- }
-#key-backspace {
- grid-column: span2;
- }
-.shift, .symbol, .special {
- background: #220022;
- }
-.symbol {
- background: #3c1361;
- font-size:1.2em;
- }
+  background: #777;
+  transform: translateY(1px);
+}
 .special {
- background: #4a3c1c;
- }
-/* F-keys styling smaller text and uppercase */
+  flex: 1.5;
+  background: #4a3c1c;
+}
+.wide {
+  flex: 3;
+}
+.shift {
+  background: #220022;
+}
+.symbol {
+  background: #3c1361;
+}
 .fkey {
- font-size:0.85em;
- font-weight: normal;
- letter-spacing:0.4px;
- }
+  font-size: 0.8em;
+  font-weight: normal;
+}
 </style>
 </head>
 <body>
 <div id="screen-container">
-<canvas id="dos-root"></canvas>
+  <canvas id="dos-root"></canvas>
 </div>
+
 <div id="keyboard-container">
 
-<!-- Row0: ALL Function keys F1-F12 -->
-<div id="fkeys-holder">
-<div data-code="112" class="key shift fkey" onclick="sendKeys(112)">F1</div>
-<div data-code="113" class="key shift fkey" onclick="sendKeys(113)">F2</div>
-<div data-code="114" class="key shift fkey" onclick="sendKeys(114)">F3</div>
-<div data-code="115" class="key shift fkey" onclick="sendKeys(115)">F4</div>
-<div data-code="116" class="key shift fkey" onclick="sendKeys(116)">F5</div>
-<div data-code="117" class="key shift fkey" onclick="sendKeys(117)">F6</div>
-<div data-code="118" class="key shift fkey" onclick="sendKeys(118)">F7</div>
-<div data-code="119" class="key shift fkey" onclick="sendKeys(119)">F8</div>
-<div data-code="120" class="key shift fkey" onclick="sendKeys(120)">F9</div>
-<div data-code="121" class="key shift fkey" onclick="sendKeys(121)">F10</div>
-<div data-code="122" class="key shift fkey" onclick="sendKeys(122)">F11</div>
-<div data-code="123" class="key shift fkey" onclick="sendKeys(123)">F12</div>
+  <!-- Function keys -->
+  <div class="key-row">
+    <div class="key fkey" onclick="sendKeys(112)">F1</div>
+    <div class="key fkey" onclick="sendKeys(113)">F2</div>
+    <div class="key fkey" onclick="sendKeys(114)">F3</div>
+    <div class="key fkey" onclick="sendKeys(115)">F4</div>
+    <div class="key fkey" onclick="sendKeys(116)">F5</div>
+    <div class="key fkey" onclick="sendKeys(117)">F6</div>
+    <div class="key fkey" onclick="sendKeys(118)">F7</div>
+    <div class="key fkey" onclick="sendKeys(119)">F8</div>
+    <div class="key fkey" onclick="sendKeys(120)">F9</div>
+    <div class="key fkey" onclick="sendKeys(121)">F10</div>
+  </div>
+
+  <!-- Numbers -->
+  <div class="key-row">
+    <div class="key" onclick="sendKeys(49)">1</div>
+    <div class="key" onclick="sendKeys(50)">2</div>
+    <div class="key" onclick="sendKeys(51)">3</div>
+    <div class="key" onclick="sendKeys(52)">4</div>
+    <div class="key" onclick="sendKeys(53)">5</div>
+    <div class="key" onclick="sendKeys(54)">6</div>
+    <div class="key" onclick="sendKeys(55)">7</div>
+    <div class="key" onclick="sendKeys(56)">8</div>
+    <div class="key" onclick="sendKeys(57)">9</div>
+    <div class="key" onclick="sendKeys(48)">0</div>
+  </div>
+
+  <!-- QWERTY row -->
+  <div class="key-row">
+    <div class="key" onclick="sendKeys(81)">Q</div>
+    <div class="key" onclick="sendKeys(87)">W</div>
+    <div class="key" onclick="sendKeys(69)">E</div>
+    <div class="key" onclick="sendKeys(82)">R</div>
+    <div class="key" onclick="sendKeys(84)">T</div>
+    <div class="key" onclick="sendKeys(89)">Y</div>
+    <div class="key" onclick="sendKeys(85)">U</div>
+    <div class="key" onclick="sendKeys(73)">I</div>
+    <div class="key" onclick="sendKeys(79)">O</div>
+    <div class="key" onclick="sendKeys(80)">P</div>
+  </div>
+
+  <!-- ASDF row -->
+  <div class="key-row">
+    <div class="key" onclick="sendKeys(65)">A</div>
+    <div class="key" onclick="sendKeys(83)">S</div>
+    <div class="key" onclick="sendKeys(68)">D</div>
+    <div class="key" onclick="sendKeys(70)">F</div>
+    <div class="key" onclick="sendKeys(71)">G</div>
+    <div class="key" onclick="sendKeys(72)">H</div>
+    <div class="key" onclick="sendKeys(74)">J</div>
+    <div class="key" onclick="sendKeys(75)">K</div>
+    <div class="key" onclick="sendKeys(76)">L</div>
+    <div class="key special" onclick="sendKeys(13)">ENTER</div>
+  </div>
+
+  <!-- ZXCV row -->
+  <div class="key-row">
+    <div class="key shift" onclick="toggleShift()" id="shift-btn">SHIFT</div>
+    <div class="key" onclick="sendKeys(90)">Z</div>
+    <div class="key" onclick="sendKeys(88)">X</div>
+    <div class="key" onclick="sendKeys(67)">C</div>
+    <div class="key" onclick="sendKeys(86)">V</div>
+    <div class="key" onclick="sendKeys(66)">B</div>
+    <div class="key" onclick="sendKeys(78)">N</div>
+    <div class="key" onclick="sendKeys(77)">M</div>
+    <div class="key special" onclick="sendKeys(8)">DEL</div>
+  </div>
+
+  <!-- Space row -->
+  <div class="key-row">
+    <div class="key wide special" onclick="sendKeys(32)">SPACE</div>
+  </div>
+
 </div>
 
-<!-- Row1: Numbers -->
-<div data-code="49" class="key" onclick="sendKeys(49)">1</div>
-<div data-code="50" class="key" onclick="sendKeys(50)">2</div>
-<div data-code="51" class="key" onclick="sendKeys(51)">3</div>
-<div data-code="52" class="key" onclick="sendKeys(52)">4</div>
-<div data-code="53" class="key" onclick="sendKeys(53)">5</div>
-<div data-code="54" class="key" onclick="sendKeys(54)">6</div>
-<div data-code="55" class="key" onclick="sendKeys(55)">7</div>
-<div data-code="56" class="key" onclick="sendKeys(56)">8</div>
-<div data-code="57" class="key" onclick="sendKeys(57)">9</div>
-<div data-code="48" class="key" onclick="sendKeys(48)">0</div>
-
-<!-- Row2: Top row symbols and letters -->
-<div data-code="192" class="key symbol" onclick="sendKeys(192)">`</div>
-<div data-code="49" class="key symbol" onclick="sendKeys(33)">!</div>
-<div data-code="50" class="key symbol" onclick="sendKeys(64)">@</div>
-<div data-code="51" class="key symbol" onclick="sendKeys(35">#</div>
-<div data-code="52" class="key symbol" onclick="sendKeys(36)">$</div>
-<div data-code="53" class="key symbol" onclick="sendKeys(37)">%</div>
-<div data-code="54" class="key symbol" onclick="sendKeys(94)">^</div>
-<div data-code="55" class="key symbol" onclick="sendKeys(38)">&</div>
-<div data-code="56" class="key symbol" onclick="sendKeys(42)">*</div>
-<div data-code="57" class="key symbol" onclick="sendKeys(40)">(
-</div>
-
-<!-- Row3: First letters -->
-<div data-code="81" class="key" onclick="sendKeys(81)">Q</div>
-<div data-code="87" class="key" onclick="sendKeys(87)">W</div>
-<div data-code="69" class="key" onclick="sendKeys(69)">E</div>
-<div data-code="82" class="key" onclick="sendKeys(82)">R</div>
-<div data-code="84" class="key" onclick="sendKeys(84)">T</div>
-<div data-code="89" class="key" onclick="sendKeys(89)">Y</div>
-<div data-code="85" class="key" onclick="sendKeys(85)">U</div>
-<div data-code="73" class="key" onclick="sendKeys(73)">I</div>
-<div data-code="79" class="key" onclick="sendKeys(79)">O</div>
-<div data-code="80" class="key" onclick="sendKeys(80)">P</div>
-
- <!-- Row4: More letters -->
-<div data-code="65" class="key" onclick="sendKeys(65)">A</div>
-<div data-code="83" class="key" onclick="sendKeys(83)">S</div>
-<div data-code="68" class="key" onclick="sendKeys(68)">D</div>
-<div data-code="70" class="key" onclick="sendKeys(70)">F</div>
-<div data-code="71" class="key" onclick="sendKeys(71)">G</div>
-<div data-code="72" class="key" onclick="sendKeys(72)">H</div>
-<div data-code="74" class="key" onclick="sendKeys(74)">J</div>
-<div data-code="75" class="key" onclick="sendKeys(75)">K</div>
-<div data-code="76" class="key" onclick="sendKeys(76)">L</div>
-<div id="key-return" data-code="13" class="key special" onclick="sendKeys(13)">ENTER</div>
-
-<!-- Row5: Last letters and backspace -->
-<div data-code="16" class="key shift" onclick="toggleShift()"><span id="shift-text">SHIFT</span></div>
-<div id="key-z" data-code="90" class="key"
-onclick="sendKeys(document.getElementById('key-z').getAttribute('data-code'))">Z</div>
-<div id="key-x" data-code="88" class="key"
-onclick="sendKeys(document.getElementById('key-x').getAttribute('data-code'))">X</div>
-<div id="key-c" data-code="67" class="key"
-onclick="sendKeys(document.getElementById('key-c').getAttribute('data-code'))">C</div>
-<div id="key-v" data-code="86" class="key"
-onclick="sendKeys(document.getElementById('key-v').getAttribute('data-code'))">V</div>
-<div id="key-b" data-code="66" class="key"
-onclick="sendKeys(document.getElementById('key-b').getAttribute('data-code'))">B</div>
-<div id="key-n" data-code="78" class="key"
-onclick="sendKeys(document.getElementById('key-n').getAttribute('data-code'))">N</div>
-<div id="key-m" data-code="77" class="key"
-onclick="sendKeys(document.getElementById('key-m').getAttribute('data-code'))">M</div>
-<div id="key-backspace" data-code="8" class="key special" onclick="sendKeys(8)">DEL</div>
-
-<!-- Row6: Space, symbols -->
-<div data-code="219" class="key symbol" onclick="sendKeys(219)">{
-</div>
-<div data-code="221" class="key symbol" onclick="sendKeys(221)">}
-</div>
-<div data-code="220" class="key symbol" onclick="sendKeys(220)">\
-</div>
-<div id="key-space" data-code="32" class="key special" onclick="sendKeys(32)">SPACE</div>
-<div data-code="188" class="key symbol" onclick="sendKeys(44)">,</div>
-<div data-code="190" class="key symbol" onclick="sendKeys(46)">.</div>
-<div data-code="191" class="key symbol" onclick="sendKeys(47)">/</div>
-<div data-code="186" class="key symbol" onclick="sendKeys(59)">;
-</div>
-<div data-code="222" class="key symbol" onclick="sendKeys(39)">'</div>
-<!-- Add more symbols -->
-<div data-code="187" class="key symbol" onclick="sendKeys(61)">=
-</div>
-<div data-code="189" class="key symbol" onclick="sendKeys(45)">-
-</div>
-<div data-code="187" class="key symbol" onclick="sendKeys(43)">+
-</div>
-<div data-code="219" class="key symbol" onclick="sendKeys(91)">[
-</div>
-<div data-code="221" class="key symbol" onclick="sendKeys(93)">]
-</div>
-</div>
 <script>
 const dosRoot = document.getElementById("dos-root");
 let ci = null;
-let shiftState = false;
-let shiftTriggered = false;
+let shiftOn = false;
 
 Dos(dosRoot, {
- wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+  wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
 }).ready((fs, main) => {
- fs.extract("basic.zip").then(() => {
- main([
- "-c", "mount d .",
- "-c", "d:",
- "-c", "cd gwbasic",
- "-c", "gwbasic"
- ]).then((client) => {
- ci = client;
- });
- });
- });
-
-function toggleShift() {
- if (!shiftState) {
- shiftState = true;
- document.getElementById('shift-text').innerText = 'SHIFT ON';
- } else {
- shiftState = false;
- document.getElementById('shift-text').innerText = 'SHIFT OFF';
- }
-}
-function sendKeys(keyCode) {
- if (!ci) return;
- ci.simulateKeyPress(keyCode);
-}
-document.getElementById("keyboard-container").addEventListener("click", () => {
- dosRoot.focus();
+  fs.extract("basic.zip").then(() => {
+    main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
+      .then(client => ci = client);
+  });
 });
+
+function toggleShift(){
+  shiftOn = !shiftOn;
+  document.getElementById("shift-btn").textContent = shiftOn ? "SHIFT ON" : "SHIFT";
+}
+function sendKeys(code){
+  if(!ci) return;
+  ci.simulateKeyPress(code);
+}
 </script>
 </body>
 </html>
