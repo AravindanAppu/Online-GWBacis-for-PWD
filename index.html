@@ -22,13 +22,12 @@
       position: absolute;
       top: 0; left: 0;
       width: 100vw; height: 60vh;
-      opacity: 0.01; /* Just visible for debugging, set to 0 after */
+      opacity: 0.01;
       z-index: 10;
       font-size: 32px;
       border: none; background: transparent;
       color: black;
       resize: none;
-      /* Allow tap/click to focus input */
     }
   </style>
 </head>
@@ -39,8 +38,8 @@
     const dosRoot = document.getElementById("dos-root");
     const overlayInput = document.getElementById("overlay-input");
     let ci = null;
+    let lastValue = "";
 
-    // Setup JS-DOS
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
@@ -57,27 +56,41 @@
       });
     });
 
-    // Only feed keys from overlay-input
     overlayInput.addEventListener("input", (e) => {
       if (!ci) return;
       let value = e.target.value;
-      for (let i = 0; i < value.length; i++) {
-        const ch = value.charAt(i);
+
+      // Find added text
+      let added = "";
+      if (value.length > lastValue.length) {
+        added = value.slice(lastValue.length);
+      } else if (lastValue.length > value.length) {
+        // Handle backspace/delete
+        // Optionally, send Backspace key: ci.simulateKeyPress(8);
+      }
+      lastValue = value;
+
+      // Send each character in 'added'
+      for (let i = 0; i < added.length; i++) {
+        const ch = added[i];
         if (ch === "\n" || ch === "\r") {
           ci.simulateKeyPress(13); // Enter
         } else {
           ci.simulateKeyPress(ch.charCodeAt(0));
         }
       }
-      e.target.value = "";
+
+      // If Enter pressed, clear all
+      if (added.includes("\n") || added.includes("\r")) {
+        overlayInput.value = "";
+        lastValue = "";
+      }
     });
 
-    // Refocus on canvas tap
     dosRoot.addEventListener("click", () => {
       overlayInput.focus();
     });
 
-    // Also refocus if textarea loses focus (mobile fix)
     overlayInput.addEventListener("blur", () => {
       setTimeout(() => overlayInput.focus(), 300);
     });
