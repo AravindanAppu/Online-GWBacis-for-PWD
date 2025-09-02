@@ -2,37 +2,169 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>GW-BASIC with js-dos</title>
-  <style>
-    body { margin: 0; background: #000; color: #0f0; font-family: monospace; }
-    #dos-root { width: 100vw; height: 80vh; background: #111; }
-    #keyboard { position: fixed; bottom: 0; width: 100%; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; background: #222; padding: 6px; }
-    .key { background: #333; color: white; text-align: center; padding: 12px; border-radius: 6px; }
-    .shift-active { background: #555; }
-    #audio-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); color: #fff; font-size: 1.2em; cursor: pointer; }
-  </style>
+  <title>GW-BASIC Virtual Keyboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+  <style>
+    body {
+      background: black;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Courier New', monospace;
+    }
+    #screen-container {
+      width: 100vw;
+      height: 45vh;
+    }
+    #dos-root {
+      width: 100%;
+      height: 100%;
+      border: 2px solid #666;
+    }
+    #keyboard-container {
+      width: 100vw;
+      height: 50vh;
+      background: #333;
+      display: flex;
+      flex-direction: column;
+      padding: 6px;
+      padding-bottom: env(safe-area-inset-bottom);
+      box-sizing: border-box;
+      gap: 4px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+    }
+    .key-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 4px;
+    }
+    .key {
+      background: #444;
+      color: white;
+      font-size: 1.1em;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 6px;
+      flex: 1;
+      min-width: 32px;
+      padding: 10px 0;
+      cursor: pointer;
+      user-select: none;
+    }
+    .key:active {
+      background: #777;
+      transform: translateY(1px);
+    }
+    .special {
+      flex: 1.5;
+      background: #4a3c1c;
+    }
+    .wide {
+      flex: 3;
+    }
+    .fkey {
+      font-size: 0.8em;
+      font-weight: normal;
+    }
+    .shift-active {
+      background: #c96 !important;
+    }
+  </style>
 </head>
 <body>
-  <div id="dos-root"></div>
-
-  <div id="keyboard">
-    <div class="key" onclick="sendKeys(65)">A</div>
-    <div class="key" onclick="sendKeys(66)">B</div>
-    <div class="key" onclick="sendKeys(67)">C</div>
-    <div class="key" id="shift-key" onclick="sendKeys(16)">Shift</div>
-    <div class="key" onclick="sendKeys(13)">⏎</div>
-    <div class="key" onclick="sendKeys(32)">Space</div>
+  <div id="screen-container">
+    <canvas id="dos-root"></canvas>
   </div>
 
-  <div id="audio-overlay">🔊 Tap to Enable Audio</div>
+  <div id="keyboard-container">
+    <!-- Function keys -->
+    <div class="key-row">
+      <div class="key fkey" onclick="pressKey(112)">F1</div>
+      <div class="key fkey" onclick="pressKey(113)">F2</div>
+      <div class="key fkey" onclick="pressKey(114)">F3</div>
+      <div class="key fkey" onclick="pressKey(115)">F4</div>
+      <div class="key fkey" onclick="pressKey(116)">F5</div>
+      <div class="key fkey" onclick="pressKey(117)">F6</div>
+      <div class="key fkey" onclick="pressKey(118)">F7</div>
+      <div class="key fkey" onclick="pressKey(119)">F8</div>
+      <div class="key fkey" onclick="pressKey(120)">F9</div>
+      <div class="key fkey" onclick="pressKey(121)">F10</div>
+    </div>
+    <!-- Numbers row -->
+    <div class="key-row">
+      <div class="key" onclick="pressKey(49)">1</div>
+      <div class="key" onclick="pressKey(50)">2</div>
+      <div class="key" onclick="pressKey(51)">3</div>
+      <div class="key" onclick="pressKey(52)">4</div>
+      <div class="key" onclick="pressKey(53)">5</div>
+      <div class="key" onclick="pressKey(54)">6</div>
+      <div class="key" onclick="pressKey(55)">7</div>
+      <div class="key" onclick="pressKey(56)">8</div>
+      <div class="key" onclick="pressKey(57)">9</div>
+      <div class="key" onclick="pressKey(48)">0</div>
+    </div>
+    <!-- QWERTY row -->
+    <div class="key-row">
+      <div class="key" onclick="pressKey(81)">Q</div>
+      <div class="key" onclick="pressKey(87)">W</div>
+      <div class="key" onclick="pressKey(69)">E</div>
+      <div class="key" onclick="pressKey(82)">R</div>
+      <div class="key" onclick="pressKey(84)">T</div>
+      <div class="key" onclick="pressKey(89)">Y</div>
+      <div class="key" onclick="pressKey(85)">U</div>
+      <div class="key" onclick="pressKey(73)">I</div>
+      <div class="key" onclick="pressKey(79)">O</div>
+      <div class="key" onclick="pressKey(80)">P</div>
+    </div>
+    <!-- ASDF row -->
+    <div class="key-row">
+      <div class="key" onclick="pressKey(65)">A</div>
+      <div class="key" onclick="pressKey(83)">S</div>
+      <div class="key" onclick="pressKey(68)">D</div>
+      <div class="key" onclick="pressKey(70)">F</div>
+      <div class="key" onclick="pressKey(71)">G</div>
+      <div class="key" onclick="pressKey(72)">H</div>
+      <div class="key" onclick="pressKey(74)">J</div>
+      <div class="key" onclick="pressKey(75)">K</div>
+      <div class="key" onclick="pressKey(76)">L</div>
+      <div class="key special" onclick="pressKey(13)">⏎</div>
+    </div>
+    <!-- ZXCV row -->
+    <div class="key-row">
+      <div id="shift-key" class="key special" onclick="toggleShift()">⇧</div>
+      <div class="key" onclick="pressKey(90)">Z</div>
+      <div class="key" onclick="pressKey(88)">X</div>
+      <div class="key" onclick="pressKey(67)">C</div>
+      <div class="key" onclick="pressKey(86)">V</div>
+      <div class="key" onclick="pressKey(66)">B</div>
+      <div class="key" onclick="pressKey(78)">N</div>
+      <div class="key" onclick="pressKey(77)">M</div>
+      <div class="key special" onclick="pressKey(8)">⌫</div>
+    </div>
+    <!-- Space + symbols -->
+    <div class="key-row">
+      <div class="key" onclick="pressKey(190)">.</div>
+      <div class="key" onclick="pressKey(188)">,</div>
+      <div class="key" onclick="pressKey(191)">/</div>
+      <div class="key wide special" onclick="pressKey(32)">SPACE</div>
+      <div class="key" onclick="pressKey(186)">;</div>
+      <div class="key" onclick="pressKey(222)">'</div>
+      <div class="key" onclick="pressKey(189)">-</div>
+      <div class="key" onclick="pressKey(187)">=</div>
+    </div>
+  </div>
 
   <script>
+    const dosRoot = document.getElementById("dos-root");
     let ci = null;
     let shiftActive = false;
-    const shiftKeyEl = document.getElementById("shift-key");
 
-    JS_DOS(document.getElementById("dos-root"), {
+    Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
       fs.extract("basic.zip").then(() => {
@@ -41,65 +173,108 @@
       });
     });
 
-    function sendKeys(code) {
-      if (!ci) return;
+    function simulateKeyEvent(keyCode, pressed) {
+      const eventType = pressed ? "keydown" : "keyup";
+      const event = document.createEvent("KeyboardEvent");
 
-      if (code === 16) {
-        shiftActive = !shiftActive;
-        shiftKeyEl.classList.toggle("shift-active", shiftActive);
-        return;
+      if (event.initKeyboardEvent) {
+        event.initKeyboardEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
+      } else {
+        event.initKeyEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
       }
 
-      if (shiftActive && code >= 65 && code <= 90) {
-        ci.simulateKeyPress(code); // uppercase A-Z
+      Object.defineProperty(event, "keyCode", { get: () => keyCode });
+      Object.defineProperty(event, "which", { get: () => keyCode });
+
+      document.dispatchEvent(event);
+    }
+
+    function toggleShift() {
+      shiftActive = !shiftActive;
+      document.getElementById("shift-key").classList.toggle("shift-active", shiftActive);
+    }
+
+    function pressKey(code) {
+      if (shiftActive) {
+        const shiftedMap = {
+          49: 33, 50: 64, 51: 35, 52: 36, 53: 37,
+          54: 94, 55: 38, 56: 42, 57: 40, 48: 41,
+          186: 58, 222: 34, 188: 60, 190: 62, 191: 63,
+          189: 95, 187: 43
+        };
+        if (code >= 65 && code <= 90) {
+          simulateKeyEvent(code, true);
+          simulateKeyEvent(code, false);
+        } else if (shiftedMap[code]) {
+          simulateKeyEvent(shiftedMap[code], true);
+          simulateKeyEvent(shiftedMap[code], false);
+        } else {
+          simulateKeyEvent(code, true);
+          simulateKeyEvent(code, false);
+        }
         shiftActive = false;
-        shiftKeyEl.classList.remove("shift-active");
+        document.getElementById("shift-key").classList.remove("shift-active");
       } else {
-        ci.simulateKeyPress(code);
+        simulateKeyEvent(code, true);
+        simulateKeyEvent(code, false);
       }
 
       if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    // 🔊 Audio unlock
-    let audioContext;
-    function initAudio() {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        SDL.audioContext = audioContext;
-      }
-      if (audioContext.state === "suspended") {
-        audioContext.resume().then(() => {
-          console.log("✅ AudioContext resumed");
-        });
-      }
-      document.getElementById("audio-overlay").style.display = "none";
+let audioContext;
+
+// Create and resume the AudioContext only after a user gesture
+function initAudio() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    SDL.audioContext = audioContext; // make sure SDL sees it
+  }
+  if (audioContext.state === "suspended") {
+    audioContext.resume().then(() => {
+      console.log("✅ AudioContext resumed successfully");
+    });
+  }
+}
+
+// Attach gesture listeners (cover both desktop + mobile)
+["click", "touchstart"].forEach(evt => {
+  document.addEventListener(evt, initAudio, { once: true });
+});
+
+// Patch SDL audio
+SDL.audio.pushAudio = function (ptr, size) {
+  if (!SDL.audioContext) return;
+
+  if (SDL.audioContext.state === "suspended") {
+    console.log("⚠️ AudioContext suspended. Waiting for user interaction.");
+    return;
+  }
+
+  try {
+    // Existing js-dos SDL push logic
+    const data = SDL.audio.mixBuffer(ptr, size);
+    const buffer = SDL.audioContext.createBuffer(2, data[0].length, SDL.audioContext.sampleRate);
+
+    buffer.getChannelData(0).set(data[0]);
+    buffer.getChannelData(1).set(data[1]);
+
+    const source = SDL.audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(SDL.audioContext.destination);
+
+    const playtime = Math.max(SDL.audioContext.currentTime, SDL.audio.nextPlayTime || 0);
+    if (typeof source.start !== "undefined") {
+      source.start(playtime);
+    } else if (typeof source.noteOn !== "undefined") {
+      source.noteOn(playtime);
     }
 
-    document.getElementById("audio-overlay").addEventListener("click", initAudio, { once: true });
-
-    SDL.audio.pushAudio = function (ptr, size) {
-      if (!SDL.audioContext) return;
-      if (SDL.audioContext.state === "suspended") return;
-
-      try {
-        const data = SDL.audio.mixBuffer(ptr, size);
-        const buffer = SDL.audioContext.createBuffer(2, data[0].length, SDL.audioContext.sampleRate);
-        buffer.getChannelData(0).set(data[0]);
-        buffer.getChannelData(1).set(data[1]);
-
-        const source = SDL.audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(SDL.audioContext.destination);
-
-        const playtime = Math.max(SDL.audioContext.currentTime, SDL.audio.nextPlayTime || 0);
-        source.start(playtime);
-
-        SDL.audio.nextPlayTime = playtime + SDL.audio.bufferDurationSecs;
-      } catch (e) {
-        console.log("❌ Audio error: " + e.toString());
-      }
-    };
+    SDL.audio.nextPlayTime = playtime + SDL.audio.bufferDurationSecs;
+  } catch (e) {
+    console.log("❌ Web Audio API error: " + e.toString());
+  }
+};
   </script>
 </body>
 </html>
