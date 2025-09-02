@@ -7,46 +7,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     body {
-      margin: 0;
       background: black;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      margin: 0;
       height: 100vh;
       overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     #dos-root {
       width: 100vw;
       height: 60vh;
       border: 2px solid #666;
     }
-    #native-input {
+    #overlay-input {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      font-size: 16px;
-      border: none;
-      background: transparent;
-      pointer-events: none;
-    }
-    #native-input:focus {
-      pointer-events: auto;
+      top: 0; left: 0;
+      width: 100vw; height: 60vh;
+      opacity: 0.01; /* Just visible for debugging, set to 0 after */
+      z-index: 10;
+      font-size: 32px;
+      border: none; background: transparent;
+      color: black;
+      resize: none;
+      /* Allow tap/click to focus input */
     }
   </style>
 </head>
 <body>
   <canvas id="dos-root"></canvas>
-  <input type="text" id="native-input" autofocus />
-
+  <textarea id="overlay-input" autofocus></textarea>
   <script>
     const dosRoot = document.getElementById("dos-root");
-    const nativeInput = document.getElementById("native-input");
+    const overlayInput = document.getElementById("overlay-input");
     let ci = null;
 
+    // Setup JS-DOS
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
@@ -58,62 +52,34 @@
           "-c", "gwbasic"
         ]).then((client) => {
           ci = client;
-          setupKeyboardHandling();
+          overlayInput.focus();
         });
       });
     });
 
-    function setupKeyboardHandling() {
-      // Handle regular key input
-      nativeInput.addEventListener("input", (e) => {
-        if (!ci) return;
-        const newValue = e.target.value;
-        if (newValue.length > 0) {
-          const lastChar = newValue.slice(-1);
-          // Send character through DOSBox stdin
-          ci.shell.sendKeys(lastChar);
-          e.target.value = ""; // Clear input
+    // Only feed keys from overlay-input
+    overlayInput.addEventListener("input", (e) => {
+      if (!ci) return;
+      let value = e.target.value;
+      for (let i = 0; i < value.length; i++) {
+        const ch = value.charAt(i);
+        if (ch === "\n" || ch === "\r") {
+          ci.simulateKeyPress(13); // Enter
+        } else {
+          ci.simulateKeyPress(ch.charCodeAt(0));
         }
-      });
-
-      // Handle special keys (Enter, Backspace, etc.)
-      nativeInput.addEventListener("keydown", (e) => {
-        if (!ci) return;
-        
-        switch(e.key) {
-          case "Enter":
-            ci.shell.sendKeys("\r");
-            e.preventDefault();
-            break;
-          case "Backspace":
-            ci.shell.sendKeys("\b");
-            e.preventDefault();
-            break;
-          case "Tab":
-            ci.shell.sendKeys("\t");
-            e.preventDefault();
-            break;
-          case "Escape":
-            ci.shell.sendKeys(String.fromCharCode(27));
-            e.preventDefault();
-            break;
-        }
-        
-        // Clear the input field after special keys
-        setTimeout(() => {
-          e.target.value = "";
-        }, 0);
-      });
-    }
-
-    // Keep focus on input
-    dosRoot.addEventListener("click", () => {
-      nativeInput.focus();
+      }
+      e.target.value = "";
     });
 
-    // Prevent losing focus
-    nativeInput.addEventListener("blur", () => {
-      setTimeout(() => nativeInput.focus(), 100);
+    // Refocus on canvas tap
+    dosRoot.addEventListener("click", () => {
+      overlayInput.focus();
+    });
+
+    // Also refocus if textarea loses focus (mobile fix)
+    overlayInput.addEventListener("blur", () => {
+      setTimeout(() => overlayInput.focus(), 300);
     });
   </script>
 </body>
