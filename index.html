@@ -15,8 +15,9 @@ body {
   font-family: 'Courier New', monospace;
 }
 #screen-container {
+  flex: 1;
   width: 100vw;
-  height: 45vh;
+  max-height: 50vh;
 }
 #dos-root {
   width: 100%;
@@ -25,21 +26,17 @@ body {
 }
 #keyboard-container {
   width: 100vw;
-  height: 50vh;
-  background: #333;
+  background: #222;
   display: flex;
   flex-direction: column;
-  padding: 6px;
-  padding-bottom: env(safe-area-inset-bottom); /* ✅ supports curved screens / notch */
-  box-sizing: border-box;
+  padding: 4px;
   gap: 4px;
-  position: fixed;
-  bottom: 0;
-  left: 0;
+  box-sizing: border-box;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
 }
 .key-row {
   display: flex;
-  flex-direction: row;
   justify-content: center;
   gap: 4px;
 }
@@ -63,7 +60,6 @@ body {
 .special { flex: 1.5; background: #4a3c1c; }
 .wide { flex: 3; }
 .fkey { font-size: 0.8em; font-weight: normal; }
-.shift-active { background: #a67c00 !important; } /* ✅ highlight when SHIFT is active */
 </style>
 </head>
 <body>
@@ -72,35 +68,6 @@ body {
 </div>
 
 <div id="keyboard-container">
-
-  <!-- Function keys -->
-  <div class="key-row">
-    <div class="key fkey" onclick="sendKeys(112)">F1</div>
-    <div class="key fkey" onclick="sendKeys(113)">F2</div>
-    <div class="key fkey" onclick="sendKeys(114)">F3</div>
-    <div class="key fkey" onclick="sendKeys(115)">F4</div>
-    <div class="key fkey" onclick="sendKeys(116)">F5</div>
-    <div class="key fkey" onclick="sendKeys(117)">F6</div>
-    <div class="key fkey" onclick="sendKeys(118)">F7</div>
-    <div class="key fkey" onclick="sendKeys(119)">F8</div>
-    <div class="key fkey" onclick="sendKeys(120)">F9</div>
-    <div class="key fkey" onclick="sendKeys(121)">F10</div>
-  </div>
-
-  <!-- Numbers row -->
-  <div class="key-row">
-    <div class="key" onclick="sendKeys(49)">1</div>
-    <div class="key" onclick="sendKeys(50)">2</div>
-    <div class="key" onclick="sendKeys(51)">3</div>
-    <div class="key" onclick="sendKeys(52)">4</div>
-    <div class="key" onclick="sendKeys(53)">5</div>
-    <div class="key" onclick="sendKeys(54)">6</div>
-    <div class="key" onclick="sendKeys(55)">7</div>
-    <div class="key" onclick="sendKeys(56)">8</div>
-    <div class="key" onclick="sendKeys(57)">9</div>
-    <div class="key" onclick="sendKeys(48)">0</div>
-  </div>
-
   <!-- QWERTY row -->
   <div class="key-row">
     <div class="key" onclick="sendKeys(81)">Q</div>
@@ -131,7 +98,7 @@ body {
 
   <!-- ZXCV row -->
   <div class="key-row">
-    <div id="shift-key" class="key special" onclick="sendKeys(16)">⇧</div>
+    <div class="key special" onclick="toggleShift()">⇧</div>
     <div class="key" onclick="sendKeys(90)">Z</div>
     <div class="key" onclick="sendKeys(88)">X</div>
     <div class="key" onclick="sendKeys(67)">C</div>
@@ -142,89 +109,59 @@ body {
     <div class="key special" onclick="sendKeys(8)">⌫</div>
   </div>
 
-  <!-- Space + basic symbols -->
+  <!-- Space row -->
   <div class="key-row">
-    <div class="key" onclick="sendKeys(190)">.</div>
     <div class="key" onclick="sendKeys(188)">,</div>
+    <div class="key" onclick="sendKeys(190)">.</div>
     <div class="key" onclick="sendKeys(191)">/</div>
     <div class="key wide special" onclick="sendKeys(32)">SPACE</div>
-    <div class="key" onclick="sendKeys(186)">;</div>
     <div class="key" onclick="sendKeys(222)">'</div>
     <div class="key" onclick="sendKeys(189)">-</div>
     <div class="key" onclick="sendKeys(187)">=</div>
   </div>
-
 </div>
 
 <script>
-const dosRoot = document.getElementById("dos-root");
+const canvas = document.getElementById("dos-root");
 let ci = null;
-let shiftActive = false; // ✅ Track shift toggle
-const shiftKeyEl = document.getElementById("shift-key");
+let shiftActive = false;
 
-Dos(dosRoot, {
-  wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
-}).ready((fs, main) => {
-  fs.extract("basic.zip").then(() => {
-    main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
-      .then(client => ci = client);
+Dos(canvas, { wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js" })
+  .ready((fs, main) => {
+    fs.extract("digger.zip").then(() => {
+      main(["-c","DIGGER.COM"]).then(client => ci = client);
+    });
   });
-});
+
+const keyMap = {
+  65: {normal:97, shift:65}, 66:{normal:98, shift:66}, 67:{normal:99, shift:67},
+  68:{normal:100, shift:68}, 69:{normal:101, shift:69}, 70:{normal:102, shift:70},
+  71:{normal:103, shift:71}, 72:{normal:104, shift:72}, 73:{normal:105, shift:73},
+  74:{normal:106, shift:74}, 75:{normal:107, shift:75}, 76:{normal:108, shift:76},
+  77:{normal:109, shift:77}, 78:{normal:110, shift:78}, 79:{normal:111, shift:79},
+  80:{normal:112, shift:80}, 81:{normal:113, shift:81}, 82:{normal:114, shift:82},
+  83:{normal:115, shift:83}, 84:{normal:116, shift:84}, 85:{normal:117, shift:85},
+  86:{normal:118, shift:86}, 87:{normal:119, shift:87}, 88:{normal:120, shift:88},
+  89:{normal:121, shift:89}, 90:{normal:122, shift:90},
+
+  188:{normal:44, shift:60}, 190:{normal:46, shift:62}, 191:{normal:47, shift:63},
+  222:{normal:39, shift:34}, 189:{normal:45, shift:95}, 187:{normal:61, shift:43}
+};
 
 function sendKeys(code) {
   if (!ci) return;
 
-  if (code === 16) { 
-    // Toggle SHIFT
-    shiftActive = !shiftActive;
-    shiftKeyEl.classList.toggle("shift-active", shiftActive);
-    return;
-  }
+  let key = keyMap[code];
+  let outCode = key ? (shiftActive ? key.shift : key.normal) : code;
+  ci.simulateKeyPress(outCode);
 
-  if (shiftActive) {
-    if (code >= 65 && code <= 90) {
-      ci.simulateKeyPress(code); // already uppercase
-    } else {
-      const shiftedMap = {
-        49: 33,   // 1 → !
-        50: 64,   // 2 → @
-        51: 35,   // 3 → #
-        52: 36,   // 4 → $
-        53: 37,   // 5 → %
-        54: 94,   // 6 → ^
-        55: 38,   // 7 → &
-        56: 42,   // 8 → *
-        57: 40,   // 9 → (
-        48: 41,   // 0 → )
-        186: 58,  // ; → :
-        222: 34,  // ' → "
-        188: 60,  // , → <
-        190: 62,  // . → >
-        191: 63,  // / → ?
-        189: 95,  // - → _
-        187: 43   // = → +
-      };
-      if (shiftedMap[code]) {
-        ci.simulateKeyPress(shiftedMap[code]);
-      } else {
-        ci.simulateKeyPress(code);
-      }
-    }
-    shiftActive = false;
-    shiftKeyEl.classList.remove("shift-active");
-  } else {
-    ci.simulateKeyPress(code);
-  }
-
+  if (shiftActive) shiftActive = false; // reset shift like Android
   if (navigator.vibrate) navigator.vibrate(20);
 }
 
-// 🔊 Fix for AudioContext autoplay policy
-document.addEventListener("click", () => {
-  if (ci && ci.audioContext && ci.audioContext.state === "suspended") {
-    ci.audioContext.resume();
-  }
-}, { once: true });
+function toggleShift() {
+  shiftActive = !shiftActive;
+}
 </script>
 </body>
 </html>
