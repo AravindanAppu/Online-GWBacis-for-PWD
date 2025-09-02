@@ -5,7 +5,6 @@
   <title>GW-BASIC Virtual Keyboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       background: black;
@@ -75,15 +74,6 @@
     .shift-active {
       background: #c96 !important;
     }
-    #pdf-btn {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 9999;
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -92,7 +82,6 @@
   </div>
 
   <div id="keyboard-container">
-    <!-- Function keys -->
     <div class="key-row">
       <div class="key fkey" onclick="pressKey(112)">F1</div>
       <div class="key fkey" onclick="pressKey(113)">F2</div>
@@ -105,7 +94,6 @@
       <div class="key fkey" onclick="pressKey(120)">F9</div>
       <div class="key fkey" onclick="pressKey(121)">F10</div>
     </div>
-    <!-- Numbers row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(49)">1</div>
       <div class="key" onclick="pressKey(50)">2</div>
@@ -118,7 +106,6 @@
       <div class="key" onclick="pressKey(57)">9</div>
       <div class="key" onclick="pressKey(48)">0</div>
     </div>
-    <!-- QWERTY row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(81)">Q</div>
       <div class="key" onclick="pressKey(87)">W</div>
@@ -131,7 +118,6 @@
       <div class="key" onclick="pressKey(79)">O</div>
       <div class="key" onclick="pressKey(80)">P</div>
     </div>
-    <!-- ASDF row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(65)">A</div>
       <div class="key" onclick="pressKey(83)">S</div>
@@ -144,7 +130,6 @@
       <div class="key" onclick="pressKey(76)">L</div>
       <div class="key special" onclick="pressKey(13)">⏎</div>
     </div>
-    <!-- ZXCV row -->
     <div class="key-row">
       <div id="shift-key" class="key special" onclick="toggleShift()">⇧</div>
       <div class="key" onclick="pressKey(90)">Z</div>
@@ -156,7 +141,6 @@
       <div class="key" onclick="pressKey(77)">M</div>
       <div class="key special" onclick="pressKey(8)">⌫</div>
     </div>
-    <!-- Space + symbols -->
     <div class="key-row">
       <div class="key" onclick="pressKey(190)">.</div>
       <div class="key" onclick="pressKey(188)">,</div>
@@ -169,24 +153,16 @@
     </div>
   </div>
 
-  <button id="pdf-btn">Save Output as PDF</button>
-
   <script>
     const dosRoot = document.getElementById("dos-root");
     let ci = null;
     let shiftActive = false;
-    window.gwBasicOutput = "";
 
     Dos(dosRoot, { wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js" })
       .ready((fs, main) => {
         fs.extract("basic.zip").then(() => {
           main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
-            .then(client => {
-              ci = client;
-              ci.on("stdout", data => {
-                window.gwBasicOutput += data + "\n";
-              });
-            });
+            .then(client => ci = client);
         });
       });
 
@@ -209,52 +185,37 @@
     }
 
     function pressKey(code) {
-      const shiftedMap = {
-        49:33,50:64,51:35,52:36,53:37,54:94,55:38,56:42,57:40,48:41,
-        186:58,222:34,188:60,190:62,191:63,189:95,187:43
-      };
       if (shiftActive) {
-        if(code>=65 && code<=90) {
+        const shiftedMap = {
+          49:33,50:64,51:35,52:36,53:37,54:94,55:38,56:42,57:40,48:41,
+          186:58,222:34,188:60,190:62,191:63,189:95,187:43
+        };
+        if (code >= 65 && code <= 90) {
           simulateKeyEvent(code,true);
           simulateKeyEvent(code,false);
-        } else if(shiftedMap[code]) {
+        } else if (shiftedMap[code]) {
           simulateKeyEvent(shiftedMap[code],true);
           simulateKeyEvent(shiftedMap[code],false);
         } else {
           simulateKeyEvent(code,true);
           simulateKeyEvent(code,false);
         }
-        shiftActive = false;
+        shiftActive=false;
         document.getElementById("shift-key").classList.remove("shift-active");
       } else {
         simulateKeyEvent(code,true);
         simulateKeyEvent(code,false);
       }
-      if(navigator.vibrate) navigator.vibrate(20);
-      ensureAudio();
+      if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    let audioContext;
-    function ensureAudio() {
-      if(!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      if(audioContext.state==="suspended") audioContext.resume();
-    }
-    document.querySelectorAll(".key").forEach(k=>k.addEventListener("click",ensureAudio,{once:true}));
-
-    // PDF Export
-    document.getElementById("pdf-btn").addEventListener("click", () => {
-      if(!window.gwBasicOutput) return alert("No GW-BASIC output yet!");
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF("p","pt","a4");
-      const lines = window.gwBasicOutput.split("\n");
-      let y=20;
-      const lineHeight = 14;
-      for(let i=0;i<lines.length;i++){
-        pdf.text(20,y,lines[i]);
-        y+=lineHeight;
-        if(y>800){pdf.addPage();y=20;}
-      }
-      pdf.save("GW-BASIC-Output.pdf");
+    // Safe audio context fix
+    ["click","touchstart"].forEach(evt => {
+      document.addEventListener(evt, () => {
+        if (ci && ci.audioContext && ci.audioContext.state === "suspended") {
+          ci.audioContext.resume();
+        }
+      }, { once:true });
     });
   </script>
 </body>
