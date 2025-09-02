@@ -1,49 +1,259 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>GW-BASIC in Browser (with js-dos v8 Virtual Keyboard)</title>
-  <script src="https://js-dos.com/v8/current/js-dos.js"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      background: black;
-      margin: 0; height: 100vh;
-      overflow: hidden;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-    }
-    #dos-root {
-      width: 100vw;
-      height: 60vh;
-      border: 2px solid #666;
-      margin-bottom: 12px;
-    }
-  </style>
+ <meta charset="UTF-8">
+ <title>GW-BASIC w/ Virtual Keyboard</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+ <style>
+ body {
+ background: black;
+ margin:0;
+ height:100vh;
+ overflow: hidden;
+ padding:0;
+ font-family: 'Courier New', monospace;
+ }
+ #screen-container {
+ width:100vw;
+ height:45vh;
+ position: relative;
+ }
+ #dos-root {
+ width:100%;
+ height:100%;
+ border:2px solid #666;
+ }
+ #keyboard-container {
+ width:100vw;
+ height:46vh;
+ background: #333;
+ display: grid;
+ grid-template-columns: repeat(10,1fr);
+ grid-gap:2px;
+ padding:2px;
+ box-sizing: border-box;
+ }
+ .key {
+ background: #444;
+ color: #ccc;
+ font-size:1.4em;
+ text-align: center;
+ border:1px solid #222;
+ border-radius:4px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ transition: all0.1s;
+ }
+ .key:hover {
+ background: #555 !important;
+ }
+ .key:active {
+ background: #777 !important;
+ transform: translateY(1px);
+ }
+ #fkeys-holder {
+ display: flex;
+ flex-direction: row;
+ flex-wrap: wrap;
+ gap:2px;
+ }
+ #key-space {
+ grid-column: span6;
+ }
+ #key-return {
+ grid-column: span2;
+ }
+ #key-backspace {
+ grid-column: span2;
+ }
+ </style>
 </head>
 <body>
-  <div id="dos-root"></div>
-  <script>
-    Dos(document.getElementById("dos-root"), {
-      wdosboxUrl: "https://js-dos.com/v8/current/wdosbox.js",
-      // Enable the soft keyboard layout feature
-      softKeyboardLayout: [
-        // Each array is a row of keys
-        ["1","2","3","4","5","6","7","8","9","0"],
-        ["Q","W","E","R","T","Y","U","I","O","P"],
-        ["A","S","D","F","G","H","J","K","L"],
-        ["Z","X","C","V","B","N","M"],
-        [" ","ENTER","BKSP"] // Space, Enter, Backspace
-      ]
-    }).ready(function(fs, main) {
-      fs.extract("basic.zip").then(function() {
-        main([
-          "-c", "mount d .",
-          "-c", "d:",
-          "-c", "cd gwbasic",
-          "-c", "gwbasic"
-        ]);
-      });
-    });
-  </script>
+ <div id="screen-container">
+ <canvas id="dos-root"></canvas>
+ </div>
+ <div id="keyboard-container">
+
+ <!-- Row0: F-keys (set grid for these below) -->
+ <div id="fkeys-holder">
+ <div data-code="112" onclick="sendKeys(112)">F1</div>
+ <div data-code="113" onclick="sendKeys(113)">F2</div>
+ <div data-code="114" onclick="sendKeys(114)">F3</div>
+ <div data-code="115" onclick="sendKeys(115)">F4</div>
+ <!-- More F-keys (F5-F10) can be added similarly here if needed -->
+ </div>
+
+ <!-- Row1: Numbers -->
+ <div data-code="49" class="key" onclick="sendKeys(49)">1</div>
+ <div data-code="50" class="key" onclick="sendKeys(50)">2</div>
+ <div data-code="51" class="key" onclick="sendKeys(51)">3</div>
+ <div data-code="52" class="key" onclick="sendKeys(52)">4</div>
+ <div data-code="53" class="key" onclick="sendKeys(53)">5</div>
+ <div data-code="54" class="key" onclick="sendKeys(54)">6</div>
+ <div data-code="55" class="key" onclick="sendKeys(55)">7</div>
+ <div data-code="56" class="key" onclick="sendKeys(56)">8</div>
+ <div data-code="57" class="key" onclick="sendKeys(57)">9</div>
+ <div data-code="48" class="key" onclick="sendKeys(48)">0</div>
+
+ <!-- Row2: First letters --> <div data-code="81" class="key" onclick="sendKeys(81)">Q</div>
+ <div data-code="87" class="key" onclick="sendKeys(87)">W</div>
+ <div data-code="69" class="key" onclick="sendKeys(69)">E</div>
+ <div data-code="82" class="key" onclick="sendKeys(82)">R</div>
+ <div data-code="84" class="key" onclick="sendKeys(84)">T</div>
+ <div data-code="89" class="key" onclick="sendKeys(89)">Y</div>
+ <div data-code="85" class="key" onclick="sendKeys(85)">U</div>
+ <div data-code="73" class="key" onclick="sendKeys(73)">I</div>
+ <div data-code="79" class="key" onclick="sendKeys(79)">O</div>
+ <div data-code="80" class="key" onclick="sendKeys(80)">P</div>
+
+ <!-- Row3: More letters -->
+ <div data-code="65" class="key" onclick="sendKeys(65)">A</div>
+ <div data-code="83" class="key" onclick="sendKeys(83)">S</div>
+ <div data-code="68" class="key" onclick="sendKeys(68)">D</div>
+ <div data-code="70" class="key" onclick="sendKeys(70)">F</div>
+ <div data-code="71" class="key" onclick="sendKeys(71)">G</div>
+ <div data-code="72" class="key" onclick="sendKeys(72)">H</div>
+ <div data-code="74" class="key" onclick="sendKeys(74)">J</div>
+ <div data-code="75" class="key" onclick="sendKeys(75)">K</div>
+ <div data-code="76" class="key" onclick="sendKeys(76)">L</div>
+ <div id="key-return" data-code="13" class="key" onclick="sendKeys(13)">ENTER</div>
+
+ <!-- Row4: Last letters -->
+ <div data-code="16" class="key shift" onclick="toggleShift()"><span id="shift-text">SHIFT</span></div>
+ <div id="key-z" data-code="90" class="key"
+ onclick="sendKeys(document.getElementById('key-z').getAttribute('data-code'))">Z</div>
+ <div id="key-x" data-code="88" class="key"
+ onclick="sendKeys(document.getElementById('key-x').getAttribute('data-code'))">X</div>
+ <div id="key-c" data-code="67" class="key"
+ onclick="sendKeys(document.getElementById('key-c').getAttribute('data-code'))">C</div>
+ <div id="key-v" data-code="86" class="key"
+ onclick="sendKeys(document.getElementById('key-v').getAttribute('data-code'))">V</div>
+ <div id="key-b" data-code="66" class="key"
+ onclick="sendKeys(document.getElementById('key-b').getAttribute('data-code'))">B</div>
+ <div id="key-n" data-code="78" class="key"
+ onclick="sendKeys(document.getElementById('key-n').getAttribute('data-code'))">N</div>
+ <div id="key-m" data-code="77" class="key"
+ onclick="sendKeys(document.getElementById('key-m').getAttribute('data-code'))">M</div>
+ <div id="key-backspace" data-code="8" class="key" onclick="sendKeys(8)">DEL</div>
+ <!-- Row5 -->
+ <div data-code="192" class="key" style="background:#220022;"
+ onclick="sendKeys(192)">`</div>
+ <div data-code="189" class="key"
+ onclick="sendKeys(187)">-</div>
+ <div data-code="187" class="key"
+ onclick="sendKeys(189)">=</div>
+ <div id="key-space" data-code="32" class="key" onclick="sendKeys(32)">SPACE</div>
+ <div data-code="219" class="key"
+ onclick="sendKeys(219)">{</div>
+ <div data-code="221" class="key"
+ onclick="sendKeys(221)">}</div>
+ <div data-code="186" class="key"
+ onclick="sendKeys(186)">;</div>
+ <div data-code="190" class="key"
+ onclick="sendKeys(190)">.</div>
+
+ </div>
+ <script>
+ const dosRoot = document.getElementById("dos-root");
+ let ci = null;
+ let shiftState = false;
+ let shiftTriggered = false;
+
+ // Setup JS-DOS:
+ Dos(dosRoot, {
+ wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+ }).ready((fs, main) => {
+ fs.extract("basic.zip").then(() => {
+ main([
+ "-c", "mount d .",
+ "-c", "d:",
+ "-c", "cd gwbasic",
+ "-c", "gwbasic"
+ ]).then((client) => {
+ ci = client;
+ });
+ });
+ });
+
+ // Toggle shift on click, but return to original state after1 keypress.
+ // Also, on keyup, reset to original state as well.
+ function toggleShift() {
+ if (!shiftState) {
+ shiftState = true;
+ document.getElementById('shift-text').innerText = 'SHIFT';
+ let zKey = document.getElementById('key-z');
+ let xKey = document.getElementById('key-x');
+ let cKey = document.getElementById('key-c');
+ let vKey = document.getElementById('key-v');
+ let bKey = document.getElementById('key-b');
+ let nKey = document.getElementById('key-n');
+ let mKey = document.getElementById('key-m');
+ zKey.setAttribute('data-code', '56'); //8 xKey.setAttribute('data-code', '57'); //9 cKey.setAttribute('data-code', '48'); //0 vKey.setAttribute('data-code', '45'); // -
+ bKey.setAttribute('data-code', '46'); // =
+ nKey.setAttribute('data-code', '54'); //6 mKey.setAttribute('data-code', '55'); //7 zKey.innerText = '8';
+ xKey.innerText = '9';
+ cKey.innerText = '0';
+ vKey.innerText = '-';
+ bKey.innerText = '=';
+ nKey.innerText = '6';
+ mKey.innerText = '7';
+ } else {
+ shiftState = false;
+ document.getElementById('shift-text').innerText = 'shift';
+ // Restore original keys document.getElementById('key-z').setAttribute('data-code', '90');
+ document.getElementById('key-x').setAttribute('data-code', '88');
+ document.getElementById('key-c').setAttribute('data-code', '67');
+ document.getElementById('key-v').setAttribute('data-code', '86');
+ document.getElementById('key-b').setAttribute('data-code', '66');
+ document.getElementById('key-n').setAttribute('data-code', '78');
+ document.getElementById('key-m').setAttribute('data-code', '77');
+ document.getElementById('key-z').innerText = 'Z';
+ document.getElementById('key-x').innerText = 'X';
+ document.getElementById('key-c').innerText = 'C';
+ document.getElementById('key-v').innerText = 'V';
+ document.getElementById('key-b').innerText = 'B';
+ document.getElementById('key-n').innerText = 'N';
+ document.getElementById('key-m').innerText = 'M';
+ }
+ }
+
+ // Override key events to update onscreen keys.
+ document.onkeydown = function(e) {
+ // Skip if event is already handled inside the iframe.
+ if (dosRoot && dosRoot.focus) {
+ e.preventDefault(); // Prevent default browser shortcuts, if desired if (e.keyCode ===16) {
+ shiftTriggered = true;
+ toggleShift();
+ return false;
+ }
+ }
+ return true; // Important to allow keypresses in textarea or iframe.
+ };
+
+ // Update on releases.
+ document.onkeyup = function(e) {
+ if (e.keyCode ===16) {
+ shiftTriggered = false;
+ toggleShift();
+ return false;
+ }
+ };
+
+ // Send keys:
+ function sendKeys(keyCode) {
+ if (!ci) return;
+ if (shiftTriggered) {
+ toggleShift();
+ }
+ ci.simulateKeyPress(keyCode);
+ }
+
+ // Handle virtual keyboard tap (mobile and desktop) by focusing the container:
+ document.getElementById("keyboard-container").addEventListener("click", () => {
+ dosRoot.focus();
+ });
+ </script>
 </body>
 </html>
