@@ -222,12 +222,15 @@
       if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    document.addEventListener("click", function() {
-      if (SDL && SDL.audioContext && SDL.audioContext.state === "suspended") {
-        SDL.audioContext.resume().then(function() {
-          console.log("AudioContext resumed successfully");
-        });
+    // 🔊 Audio unlock fix
+    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    function ensureAudio() {
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
       }
+    }
+    document.querySelectorAll(".key").forEach(key => {
+      key.addEventListener("click", ensureAudio, { once: true });
     });
   </script>
 </body>
