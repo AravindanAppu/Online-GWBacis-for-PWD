@@ -236,10 +236,11 @@
       if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    // 🔊 Audio unlock
+    // 🔊 Audio unlock fix
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     document.addEventListener("click", () => {
-      if (ci && ci.audioContext && ci.audioContext.state === "suspended") {
-        ci.audioContext.resume();
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
       }
     }, { once: true });
   </script>
