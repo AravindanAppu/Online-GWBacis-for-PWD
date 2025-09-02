@@ -6,17 +6,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <style>
-    body { background: black; margin: 0; height: 100vh; display: flex; flex-direction: column; font-family: 'Courier New', monospace; }
-    #screen-container { width: 100vw; height: 45vh; }
-    #dos-root { width: 100%; height: 100%; border: 2px solid #666; }
-    #keyboard-container { width: 100vw; height: 50vh; background: #333; display: flex; flex-direction: column; padding: 6px; padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box; gap: 4px; position: fixed; bottom: 0; left: 0; }
-    .key-row { display: flex; flex-direction: row; justify-content: center; gap: 4px; }
-    .key { background: #444; color: white; font-size: 1.1em; font-weight: bold; text-align: center; border-radius: 6px; flex: 1; min-width: 32px; padding: 10px 0; cursor: pointer; user-select: none; }
-    .key:active { background: #777; transform: translateY(1px); }
-    .special { flex: 1.5; background: #4a3c1c; }
-    .wide { flex: 3; }
-    .fkey { font-size: 0.8em; font-weight: normal; }
-    .shift-active { background: #c96 !important; }
+    body {
+      background: black;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Courier New', monospace;
+    }
+    #screen-container {
+      width: 100vw;
+      height: 45vh;
+    }
+    #dos-root {
+      width: 100%;
+      height: 100%;
+      border: 2px solid #666;
+    }
+    #keyboard-container {
+      width: 100vw;
+      height: 50vh;
+      background: #333;
+      display: flex;
+      flex-direction: column;
+      padding: 6px;
+      padding-bottom: env(safe-area-inset-bottom);
+      box-sizing: border-box;
+      gap: 4px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+    }
+    .key-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 4px;
+    }
+    .key {
+      background: #444;
+      color: white;
+      font-size: 1.1em;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 6px;
+      flex: 1;
+      min-width: 32px;
+      padding: 10px 0;
+      cursor: pointer;
+      user-select: none;
+    }
+    .key:active {
+      background: #777;
+      transform: translateY(1px);
+    }
+    .special {
+      flex: 1.5;
+      background: #4a3c1c;
+    }
+    .wide {
+      flex: 3;
+    }
+    .fkey {
+      font-size: 0.8em;
+      font-weight: normal;
+    }
+    .shift-active {
+      background: #c96 !important;
+    }
   </style>
 </head>
 <body>
@@ -100,25 +157,14 @@
     const dosRoot = document.getElementById("dos-root");
     let ci = null;
     let shiftActive = false;
-    let audioContext = null;
 
-    Dos(dosRoot, {
-      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
-    }).ready((fs, main) => {
-      fs.extract("basic.zip").then(() => {
-        main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
-          .then(client => {
-            ci = client;
-            audioContext = ci.audioContext;
-
-            ["click", "touchstart"].forEach(evt => {
-              document.addEventListener(evt, () => {
-                if (audioContext.state === "suspended") audioContext.resume();
-              }, { once: true });
-            });
-          });
+    Dos(dosRoot, { wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js" })
+      .ready((fs, main) => {
+        fs.extract("basic.zip").then(() => {
+          main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
+            .then(client => ci = client);
+        });
       });
-    });
 
     function simulateKeyEvent(keyCode, pressed) {
       const eventType = pressed ? "keydown" : "keyup";
@@ -139,29 +185,38 @@
     }
 
     function pressKey(code) {
-      if (!ci) return;
-
-      const shiftedMap = {
-        49: 33,50: 64,51: 35,52: 36,53: 37,54: 94,55: 38,56: 42,57: 40,48: 41,
-        186: 58,222: 34,188: 60,190: 62,191: 63,189: 95,187: 43
-      };
-
       if (shiftActive) {
+        const shiftedMap = {
+          49:33,50:64,51:35,52:36,53:37,54:94,55:38,56:42,57:40,48:41,
+          186:58,222:34,188:60,190:62,191:63,189:95,187:43
+        };
         if (code >= 65 && code <= 90) {
-          ci.simulateKeyPress(code);
+          simulateKeyEvent(code,true);
+          simulateKeyEvent(code,false);
         } else if (shiftedMap[code]) {
-          ci.simulateKeyPress(shiftedMap[code]);
+          simulateKeyEvent(shiftedMap[code],true);
+          simulateKeyEvent(shiftedMap[code],false);
         } else {
-          ci.simulateKeyPress(code);
+          simulateKeyEvent(code,true);
+          simulateKeyEvent(code,false);
         }
-        shiftActive = false;
+        shiftActive=false;
         document.getElementById("shift-key").classList.remove("shift-active");
       } else {
-        ci.simulateKeyPress(code);
+        simulateKeyEvent(code,true);
+        simulateKeyEvent(code,false);
       }
-
       if (navigator.vibrate) navigator.vibrate(20);
     }
+
+    // Safe audio context fix
+    ["click","touchstart"].forEach(evt => {
+      document.addEventListener(evt, () => {
+        if (ci && ci.audioContext && ci.audioContext.state === "suspended") {
+          ci.audioContext.resume();
+        }
+      }, { once:true });
+    });
   </script>
 </body>
 </html>
