@@ -82,6 +82,7 @@
   </div>
 
   <div id="keyboard-container">
+    <!-- Function keys -->
     <div class="key-row">
       <div class="key fkey" onclick="pressKey(112)">F1</div>
       <div class="key fkey" onclick="pressKey(113)">F2</div>
@@ -94,6 +95,7 @@
       <div class="key fkey" onclick="pressKey(120)">F9</div>
       <div class="key fkey" onclick="pressKey(121)">F10</div>
     </div>
+    <!-- Numbers row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(49)">1</div>
       <div class="key" onclick="pressKey(50)">2</div>
@@ -106,6 +108,7 @@
       <div class="key" onclick="pressKey(57)">9</div>
       <div class="key" onclick="pressKey(48)">0</div>
     </div>
+    <!-- QWERTY row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(81)">Q</div>
       <div class="key" onclick="pressKey(87)">W</div>
@@ -118,6 +121,7 @@
       <div class="key" onclick="pressKey(79)">O</div>
       <div class="key" onclick="pressKey(80)">P</div>
     </div>
+    <!-- ASDF row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(65)">A</div>
       <div class="key" onclick="pressKey(83)">S</div>
@@ -130,6 +134,7 @@
       <div class="key" onclick="pressKey(76)">L</div>
       <div class="key special" onclick="pressKey(13)">⏎</div>
     </div>
+    <!-- ZXCV row -->
     <div class="key-row">
       <div id="shift-key" class="key special" onclick="toggleShift()">⇧</div>
       <div class="key" onclick="pressKey(90)">Z</div>
@@ -141,6 +146,7 @@
       <div class="key" onclick="pressKey(77)">M</div>
       <div class="key special" onclick="pressKey(8)">⌫</div>
     </div>
+    <!-- Space + symbols -->
     <div class="key-row">
       <div class="key" onclick="pressKey(190)">.</div>
       <div class="key" onclick="pressKey(188)">,</div>
@@ -170,13 +176,16 @@
     function simulateKeyEvent(keyCode, pressed) {
       const eventType = pressed ? "keydown" : "keyup";
       const event = document.createEvent("KeyboardEvent");
+
       if (event.initKeyboardEvent) {
         event.initKeyboardEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
       } else {
         event.initKeyEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
       }
+
       Object.defineProperty(event, "keyCode", { get: () => keyCode });
       Object.defineProperty(event, "which", { get: () => keyCode });
+
       document.dispatchEvent(event);
     }
 
@@ -188,9 +197,10 @@
     function pressKey(code) {
       if (shiftActive) {
         const shiftedMap = {
-          49: 33, 50: 64, 51: 35, 52: 36, 53: 37, 54: 94,
-          55: 38, 56: 42, 57: 40, 48: 41, 186: 58, 222: 34,
-          188: 60, 190: 62, 191: 63, 189: 95, 187: 43
+          49: 33, 50: 64, 51: 35, 52: 36, 53: 37,
+          54: 94, 55: 38, 56: 42, 57: 40, 48: 41,
+          186: 58, 222: 34, 188: 60, 190: 62, 191: 63,
+          189: 95, 187: 43
         };
         if (code >= 65 && code <= 90) {
           simulateKeyEvent(code, true);
@@ -208,15 +218,17 @@
         simulateKeyEvent(code, true);
         simulateKeyEvent(code, false);
       }
+
       if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    document.addEventListener("click", () => {
-      if (audioContext.state === "suspended") {
-        audioContext.resume();
+    document.addEventListener("click", function() {
+      if (SDL && SDL.audioContext && SDL.audioContext.state === "suspended") {
+        SDL.audioContext.resume().then(function() {
+          console.log("AudioContext resumed successfully");
+        });
       }
-    }, { once: true });
+    });
   </script>
 </body>
 </html>
