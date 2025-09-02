@@ -2,54 +2,99 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>GW-BASIC Keyboard</title>
+  <title>GW-BASIC Virtual Keyboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <style>
     body {
+      background: black;
       margin: 0;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      background: #111;
-      color: white;
-      font-family: sans-serif;
+      font-family: 'Courier New', monospace;
+    }
+    #screen-container {
+      width: 100vw;
+      height: 45vh;
     }
     #dos-root {
-      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: 2px solid #666;
     }
-    #keyboard {
-      background: #222;
-      padding: 5px;
+    #keyboard-container {
+      width: 100vw;
+      height: 50vh;
+      background: #333;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      padding: 6px;
+      padding-bottom: env(safe-area-inset-bottom);
+      box-sizing: border-box;
+      gap: 4px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
     }
-    .row {
+    .key-row {
       display: flex;
+      flex-direction: row;
       justify-content: center;
-      gap: 5px;
+      gap: 4px;
     }
     .key {
       background: #444;
-      border-radius: 8px;
-      padding: 10px 14px;
+      color: white;
+      font-size: 1.1em;
+      font-weight: bold;
       text-align: center;
+      border-radius: 6px;
+      flex: 1;
+      min-width: 32px;
+      padding: 10px 0;
       cursor: pointer;
       user-select: none;
-      font-size: 16px;
     }
     .key:active {
-      background: #666;
+      background: #777;
+      transform: translateY(1px);
     }
-    #shift-key.shift-active {
-      background: #999;
+    .special {
+      flex: 1.5;
+      background: #4a3c1c;
+    }
+    .wide {
+      flex: 3;
+    }
+    .fkey {
+      font-size: 0.8em;
+      font-weight: normal;
+    }
+    .shift-active {
+      background: #c96 !important;
     }
   </style>
 </head>
 <body>
-  <div id="dos-root"></div>
-  <div id="keyboard">
-    <div class="row">
+  <div id="screen-container">
+    <canvas id="dos-root"></canvas>
+  </div>
+
+  <div id="keyboard-container">
+    <div class="key-row">
+      <div class="key fkey" onclick="pressKey(112)">F1</div>
+      <div class="key fkey" onclick="pressKey(113)">F2</div>
+      <div class="key fkey" onclick="pressKey(114)">F3</div>
+      <div class="key fkey" onclick="pressKey(115)">F4</div>
+      <div class="key fkey" onclick="pressKey(116)">F5</div>
+      <div class="key fkey" onclick="pressKey(117)">F6</div>
+      <div class="key fkey" onclick="pressKey(118)">F7</div>
+      <div class="key fkey" onclick="pressKey(119)">F8</div>
+      <div class="key fkey" onclick="pressKey(120)">F9</div>
+      <div class="key fkey" onclick="pressKey(121)">F10</div>
+    </div>
+    <div class="key-row">
       <div class="key" onclick="pressKey(49)">1</div>
       <div class="key" onclick="pressKey(50)">2</div>
       <div class="key" onclick="pressKey(51)">3</div>
@@ -61,7 +106,7 @@
       <div class="key" onclick="pressKey(57)">9</div>
       <div class="key" onclick="pressKey(48)">0</div>
     </div>
-    <div class="row">
+    <div class="key-row">
       <div class="key" onclick="pressKey(81)">Q</div>
       <div class="key" onclick="pressKey(87)">W</div>
       <div class="key" onclick="pressKey(69)">E</div>
@@ -73,7 +118,7 @@
       <div class="key" onclick="pressKey(79)">O</div>
       <div class="key" onclick="pressKey(80)">P</div>
     </div>
-    <div class="row">
+    <div class="key-row">
       <div class="key" onclick="pressKey(65)">A</div>
       <div class="key" onclick="pressKey(83)">S</div>
       <div class="key" onclick="pressKey(68)">D</div>
@@ -83,9 +128,10 @@
       <div class="key" onclick="pressKey(74)">J</div>
       <div class="key" onclick="pressKey(75)">K</div>
       <div class="key" onclick="pressKey(76)">L</div>
+      <div class="key special" onclick="pressKey(13)">⏎</div>
     </div>
-    <div class="row">
-      <div id="shift-key" class="key" onclick="toggleShift()">Shift</div>
+    <div class="key-row">
+      <div id="shift-key" class="key special" onclick="toggleShift()">⇧</div>
       <div class="key" onclick="pressKey(90)">Z</div>
       <div class="key" onclick="pressKey(88)">X</div>
       <div class="key" onclick="pressKey(67)">C</div>
@@ -93,11 +139,17 @@
       <div class="key" onclick="pressKey(66)">B</div>
       <div class="key" onclick="pressKey(78)">N</div>
       <div class="key" onclick="pressKey(77)">M</div>
-      <div class="key" onclick="pressKey(8)">⌫</div>
+      <div class="key special" onclick="pressKey(8)">⌫</div>
     </div>
-    <div class="row">
-      <div class="key" style="flex:2" onclick="pressKey(32)">Space</div>
-      <div class="key" style="flex:1" onclick="pressKey(13)">Enter</div>
+    <div class="key-row">
+      <div class="key" onclick="pressKey(190)">.</div>
+      <div class="key" onclick="pressKey(188)">,</div>
+      <div class="key" onclick="pressKey(191)">/</div>
+      <div class="key wide special" onclick="pressKey(32)">SPACE</div>
+      <div class="key" onclick="pressKey(186)">;</div>
+      <div class="key" onclick="pressKey(222)">'</div>
+      <div class="key" onclick="pressKey(189)">-</div>
+      <div class="key" onclick="pressKey(187)">=</div>
     </div>
   </div>
 
@@ -136,10 +188,9 @@
     function pressKey(code) {
       if (shiftActive) {
         const shiftedMap = {
-          49: 33, 50: 64, 51: 35, 52: 36, 53: 37,
-          54: 94, 55: 38, 56: 42, 57: 40, 48: 41,
-          186: 58, 222: 34, 188: 60, 190: 62,
-          191: 63, 189: 95, 187: 43
+          49: 33, 50: 64, 51: 35, 52: 36, 53: 37, 54: 94,
+          55: 38, 56: 42, 57: 40, 48: 41, 186: 58, 222: 34,
+          188: 60, 190: 62, 191: 63, 189: 95, 187: 43
         };
         if (code >= 65 && code <= 90) {
           simulateKeyEvent(code, true);
@@ -160,18 +211,12 @@
       if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    function ensureAudio() {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    document.addEventListener("click", () => {
       if (audioContext.state === "suspended") {
         audioContext.resume();
       }
-      if (ci && ci.audioContext && ci.audioContext.state === "suspended") {
-        ci.audioContext.resume();
-      }
-    }
-    document.querySelectorAll(".key").forEach(key => {
-      key.addEventListener("click", ensureAudio, { once: true });
-    });
+    }, { once: true });
   </script>
 </body>
 </html>
