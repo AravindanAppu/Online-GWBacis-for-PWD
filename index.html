@@ -43,7 +43,6 @@
     const nativeInput = document.getElementById("native-input");
     let ci = null;
 
-    // Start DOSBox
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
@@ -60,54 +59,35 @@
       });
     });
 
-    // Listen only to keydown for all inputs
     nativeInput.addEventListener("keydown", (e) => {
       if (!ci) return;
 
-      const code = e.key.charCodeAt(0);
+      let scan = 0;
+      let ascii = 0;
 
       switch (e.key) {
-        case "Enter":
-          ci.simulateKeyEvent(0x1C, 13, true);
-          ci.simulateKeyEvent(0x1C, 13, false);
-          e.preventDefault();
-          break;
-        case "Backspace":
-          ci.simulateKeyEvent(0x0E, 8, true);
-          ci.simulateKeyEvent(0x0E, 8, false);
-          e.preventDefault();
-          break;
-        case "ArrowUp":
-          ci.simulateKeyEvent(0x48, 0, true);
-          ci.simulateKeyEvent(0x48, 0, false);
-          e.preventDefault();
-          break;
-        case "ArrowDown":
-          ci.simulateKeyEvent(0x50, 0, true);
-          ci.simulateKeyEvent(0x50, 0, false);
-          e.preventDefault();
-          break;
-        case "ArrowLeft":
-          ci.simulateKeyEvent(0x4B, 0, true);
-          ci.simulateKeyEvent(0x4B, 0, false);
-          e.preventDefault();
-          break;
-        case "ArrowRight":
-          ci.simulateKeyEvent(0x4D, 0, true);
-          ci.simulateKeyEvent(0x4D, 0, false);
-          e.preventDefault();
-          break;
+        case "Enter": scan = 0x1C; ascii = 13; break;
+        case "Backspace": scan = 0x0E; ascii = 8; break;
+        case "ArrowUp": scan = 0x48; ascii = 0; break;
+        case "ArrowDown": scan = 0x50; ascii = 0; break;
+        case "ArrowLeft": scan = 0x4B; ascii = 0; break;
+        case "ArrowRight": scan = 0x4D; ascii = 0; break;
+        case " ": scan = 0x39; ascii = 32; break;
+        case "Escape": scan = 0x01; ascii = 27; break;
         default:
           if (e.key.length === 1) {
-            // Normal characters
-            ci.simulateKeyEvent(code, code, true);
-            ci.simulateKeyEvent(code, code, false);
+            ascii = e.key.charCodeAt(0);
+            scan = ascii; // fallback: use ASCII as scan
           }
-          break;
+      }
+
+      if (scan || ascii) {
+        ci.simulateKeyEvent(scan, ascii, true);
+        ci.simulateKeyEvent(scan, ascii, false);
+        e.preventDefault();
       }
     });
 
-    // Keep focus on tap
     dosRoot.addEventListener("click", () => {
       nativeInput.focus();
     });
