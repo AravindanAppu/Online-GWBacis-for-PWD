@@ -222,7 +222,7 @@
       if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    // 🔊 Audio unlock fix
+    // 🔊 Audio unlock fix (click + touchstart)
     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
     function ensureAudio() {
       if (audioContext.state === "suspended") {
@@ -231,6 +231,7 @@
     }
     document.querySelectorAll(".key").forEach(key => {
       key.addEventListener("click", ensureAudio, { once: true });
+      key.addEventListener("touchstart", ensureAudio, { once: true });
     });
   </script>
 </body>
