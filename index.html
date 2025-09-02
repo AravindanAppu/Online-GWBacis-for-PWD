@@ -1,94 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>GW-BASIC (input-only keyboard)</title>
+  <meta charset="UTF-8">
+  <title>GW-BASIC in Browser</title>
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
-    html,body { height:100%; margin:0; background:black; }
-    body { display:flex; align-items:center; justify-content:center; }
-    #dos-root { width:100vw; height:60vh; border:2px solid #666; }
-    /* invisible full-screen input to raise soft keyboard */
+    body {
+      margin: 0;
+      background: black;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #dos-root {
+      width: 100vw;
+      height: 60vh;
+      border: 2px solid #666;
+    }
     #native-input {
       position: absolute;
-      top:0; left:0; width:100%; height:100%;
-      opacity:0; font-size:16px; border:none; background:transparent;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      font-size: 16px; /* prevent zoom */
+      border: none;
+      background: transparent;
     }
   </style>
 </head>
 <body>
   <canvas id="dos-root"></canvas>
-  <input id="native-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+  <input type="text" id="native-input" autofocus />
 
   <script>
-  (function () {
-    const dosRoot = document.getElementById('dos-root');
-    const nativeInput = document.getElementById('native-input');
+    const dosRoot = document.getElementById("dos-root");
+    const nativeInput = document.getElementById("native-input");
     let ci = null;
-    let composing = false; // track IME composition
 
-    // initialize js-dos / GW-BASIC
-    Dos(dosRoot, { wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js" })
-      .ready((fs, main) => {
-        fs.extract("basic.zip").then(() => {
-          main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
-            .then(client => {
-              ci = client;
-              nativeInput.focus();
-            });
+    Dos(dosRoot, {
+      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+    }).ready((fs, main) => {
+      fs.extract("basic.zip").then(() => {
+        main([
+          "-c", "mount d .",
+          "-c", "d:",
+          "-c", "cd gwbasic",
+          "-c", "gwbasic"
+        ]).then((client) => {
+          ci = client;
+          nativeInput.focus();
         });
       });
+    });
 
-    // Left SHIFT scan code
-    const SHIFT_SCAN = 0x2A;
-
-    // Base scan map for US layout (Set 1). Map physical key -> scan code.
-    // We'll use these scans when sending characters, and press SHIFT if needed.
+    // Base scan codes (subset, US layout)
     const baseScans = {
-      // letters
-      a:0x1E,b:0x30,c:0x2E,d:0x20,e:0x12,f:0x21,g:0x22,h:0x23,i:0x17,j:0x24,k:0x25,l:0x26,
-      m:0x32,n:0x31,o:0x18,p:0x19,q:0x10,r:0x13,s:0x1F,t:0x14,u:0x16,v:0x2F,w:0x11,x:0x2D,y:0x15,z:0x2C,
-      // numbers row
-      '1':0x02,'2':0x03,'3':0x04,'4':0x05,'5':0x06,'6':0x07,'7':0x08,'8':0x09,'9':0x0A,'0':0x0B,
-      // punctuation / other keys
-      '-':0x0C,'=':0x0D,'`':0x29,'[':0x1A,']':0x1B,'\\':0x2B,';':0x27,"'":0x28,',':0x33,'.':0x34,'/':0x35,
-      ' ':0x39, '\t':0x0F
+      'a': 0x1E, 'b': 0x30, 'c': 0x2E, 'd': 0x20,
+      'e': 0x12, 'f': 0x21, 'g': 0x22, 'h': 0x23,
+      'i': 0x17, 'j': 0x24, 'k': 0x25, 'l': 0x26,
+      'm': 0x32, 'n': 0x31, 'o': 0x18, 'p': 0x19,
+      'q': 0x10, 'r': 0x13, 's': 0x1F, 't': 0x14,
+      'u': 0x16, 'v': 0x2F, 'w': 0x11, 'x': 0x2D,
+      'y': 0x15, 'z': 0x2C,
+      '0': 0x0B, '1': 0x02, '2': 0x03, '3': 0x04,
+      '4': 0x05, '5': 0x06, '6': 0x07, '7': 0x08,
+      '8': 0x09, '9': 0x0A,
+      ' ': 0x39, '\n': 0x1C, '\r': 0x1C, '\b': 0x0E,
+      ',': 0x33, '.': 0x34, '/': 0x35, ';': 0x27,
+      "'": 0x28, '[': 0x1A, ']': 0x1B, '\\': 0x2B,
+      '-': 0x0C, '=': 0x0D, '`': 0x29
     };
 
-    // Build a full char map: for each printable character map to {scan, char, shift}
+    // Full character map
     const charMap = {};
 
-    // letters (lower + upper)
-    for (let c = 97; c <= 122; c++) { // 'a'..'z'
-      const lower = String.fromCharCode(c);
-      const upper = String.fromCharCode(c - 32);
-      const scan = baseScans[lower];
-      if (scan) {
-        charMap[lower] = { scan, char: lower.charCodeAt(0), shift:false };
-        charMap[upper] = { scan, char: upper.charCodeAt(0), shift:true };
+    // Letters (lower and upper)
+    for (const [ch, scan] of Object.entries(baseScans)) {
+      if (ch >= 'a' && ch <= 'z') {
+        charMap[ch] = { scan, char: ch.charCodeAt(0), shift: false };
+        const up = ch.toUpperCase();
+        charMap[up] = { scan, char: up.charCodeAt(0), shift: true };
       }
     }
 
-    // numbers and shifted symbols on numbers row
-    const numPairs = {
-      '1':'!','2':'@','3':'#','4':'$','5':'%','6':'^','7':'&','8':'*','9':'(','0':')'
-    };
-    for (const [num, sym] of Object.entries(numPairs)) {
-      const scan = baseScans[num];
-      charMap[num] = { scan, char: num.charCodeAt(0), shift:false };
-      charMap[sym] = { scan, char: sym.charCodeAt(0), shift:true };
+    // Digits and shifted symbols
+    const digitShift = { '1':'!', '2':'@', '3':'#', '4':'$', '5':'%',
+                         '6':'^', '7':'&', '8':'*', '9':'(', '0':')' };
+    for (const [d, sym] of Object.entries(digitShift)) {
+      const scan = baseScans[d];
+      charMap[d] = { scan, char: d.charCodeAt(0), shift: false };
+      charMap[sym] = { scan, char: sym.charCodeAt(0), shift: true };
     }
 
-    // other punctuation pairs (non-alphanumeric)
-    const otherPairs = {
-      '-':'_','=','+','=' // placeholder; we'll explicitly define below
-    };
-    // explicit mapping for punctuation & their shifted symbols:
+    // Punctuation
     const punct = {
-      '-':'_','=':'+','`':'~',
-      '[':'{',']':'}','\\':'|',
-      ';':':',"'":'"',',':'<','.':'>','/':'?'
+      '-':'_', '=':'+', '`':'~',
+      '[':'{', ']':'}', '\\':'|',
+      ';':':', "'":'"', ',':'<', '.':'>', '/':'?'
     };
     for (const [k,v] of Object.entries(punct)) {
       const scan = baseScans[k];
@@ -98,95 +112,33 @@
       }
     }
 
-    // space, tab
-    charMap[' '] = { scan: baseScans[' '], char:32, shift:false };
-    charMap['\t'] = { scan: baseScans['\t'], char:9, shift:false };
+    // Space, Enter, Backspace
+    charMap[' '] = { scan: baseScans[' '], char: 32, shift:false };
+    charMap['\n'] = { scan: baseScans['\n'], char: 13, shift:false };
+    charMap['\r'] = { scan: baseScans['\r'], char: 13, shift:false };
+    charMap['\b'] = { scan: baseScans['\b'], char: 8, shift:false };
 
-    // Enter / newline (map to Enter)
-    charMap['\n'] = { scan: 0x1C, char:13, shift:false };
-    charMap['\r'] = { scan: 0x1C, char:13, shift:false };
-
-    // Fallback: if a char is missing later we'll send ASCII fallback.
-
-    // Helper: press or release a key
-    function sendEvent(scan, ascii, pressed) {
+    // Forward mobile keyboard input
+    nativeInput.addEventListener("input", (e) => {
       if (!ci) return;
-      // some DOS integrations don't care about ascii for non-printable; still pass ascii
-      ci.simulateKeyEvent(scan, ascii || 0, pressed);
-    }
-
-    // Send one printable character (handles SHIFT when needed)
-    function sendChar(ch) {
-      if (!ci) return;
-      const entry = charMap[ch];
-      if (entry) {
-        if (entry.shift) {
-          // press SHIFT
-          sendEvent(SHIFT_SCAN, 0, true);
+      const val = e.target.value;
+      if (val.length > 0) {
+        const ch = val.slice(-1);
+        const map = charMap[ch];
+        if (map) {
+          if (map.shift) ci.simulateKeyEvent(0x2A, 0, true); // shift down
+          ci.simulateKeyEvent(map.scan, map.char, true);   // key down
+          ci.simulateKeyEvent(map.scan, map.char, false);  // key up
+          if (map.shift) ci.simulateKeyEvent(0x2A, 0, false); // shift up
         }
-        // key down
-        sendEvent(entry.scan, entry.char, true);
-        // key up
-        sendEvent(entry.scan, entry.char, false);
-        if (entry.shift) {
-          // release SHIFT
-          sendEvent(SHIFT_SCAN, 0, false);
-        }
-      } else {
-        // fallback: send ascii as both scan and char (not perfect but works)
-        const ascii = ch.charCodeAt(0);
-        sendEvent(ascii, ascii, true);
-        sendEvent(ascii, ascii, false);
+        e.target.value = "";
       }
-    }
+    });
 
-    // Process the whole input value: send every character in order
-    function processValue(val) {
-      if (!ci || !val) return;
-      for (let i = 0; i < val.length; i++) {
-        const ch = val[i];
-        // If the IME commits a CRLF, convert CR to Enter
-        if (ch === '\r') {
-          sendChar('\n');
-        } else {
-          sendChar(ch);
-        }
-      }
-    }
-
-    // IME composition handlers: while composing, don't send characters
-    nativeInput.addEventListener('compositionstart', () => {
-      composing = true;
-    }, false);
-
-    nativeInput.addEventListener('compositionend', (e) => {
-      composing = false;
-      // compositionend typically provides the committed text in e.data
-      // but consume the entire input value to be safe
-      const v = nativeInput.value;
-      processValue(v);
-      nativeInput.value = ''; // clear so we receive next commits
-    }, false);
-
-    // input handler: only act when NOT composing
-    nativeInput.addEventListener('input', (e) => {
-      if (!ci) return;
-      if (composing) return; // IME in progress, skip until compositionend
-      const v = nativeInput.value;
-      if (!v) return;
-      processValue(v);
-      nativeInput.value = ''; // clear input so next input event contains fresh data
-    }, false);
-
-    // Keep focus on canvas tap so soft keyboard shows
-    dosRoot.addEventListener('click', () => nativeInput.focus(), false);
-    // also on touch start for some browsers
-    dosRoot.addEventListener('touchstart', () => nativeInput.focus(), false);
-
-    // focus input on load
-    window.addEventListener('load', () => setTimeout(()=>nativeInput.focus(), 50));
-
-  })();
+    // Keep focus on input
+    dosRoot.addEventListener("click", () => {
+      nativeInput.focus();
+    });
   </script>
 </body>
 </html>
