@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>GW-BASIC Virtual Keyboard — Shift (toupper) + simulateKeyEvent</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <meta charset="UTF-8">
+  <title>GW-BASIC Virtual Keyboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <style>
     body {
@@ -14,43 +14,66 @@
       flex-direction: column;
       font-family: 'Courier New', monospace;
     }
-    #screen-container { width:100vw; height:45vh; }
-    #dos-root { width:100%; height:100%; border:2px solid #666; display:block; }
+    #screen-container {
+      width: 100vw;
+      height: 45vh;
+    }
+    #dos-root {
+      width: 100%;
+      height: 100%;
+      border: 2px solid #666;
+    }
     #keyboard-container {
-      width:100vw;
-      height:50vh;
-      background:#333;
-      display:flex;
-      flex-direction:column;
-      padding:6px;
-      padding-bottom:env(safe-area-inset-bottom);
-      box-sizing:border-box;
-      gap:6px;
-      position:fixed;
-      bottom:0;
-      left:0;
-      border-top-left-radius:18px;
-      border-top-right-radius:18px;
+      width: 100vw;
+      height: 50vh;
+      background: #333;
+      display: flex;
+      flex-direction: column;
+      padding: 6px;
+      padding-bottom: env(safe-area-inset-bottom);
+      box-sizing: border-box;
+      gap: 4px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
     }
-    .key-row { display:flex; gap:6px; justify-content:center; }
+    .key-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 4px;
+    }
     .key {
-      background:#444;
-      color:#fff;
-      font-size:1.05rem;
-      font-weight:700;
-      text-align:center;
-      border-radius:8px;
-      flex:1;
-      min-width:36px;
-      padding:10px 0;
-      user-select:none;
-      cursor:pointer;
+      background: #444;
+      color: white;
+      font-size: 1.1em;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 6px;
+      flex: 1;
+      min-width: 32px;
+      padding: 10px 0;
+      cursor: pointer;
+      user-select: none;
     }
-    .key:active { transform: translateY(1px); background:#777; }
-    .special { flex:1.6; background:#4a3c1c; }
-    .wide { flex:3; }
-    .fkey { font-size:0.78rem; font-weight:600; }
-    .shift-active { background:#c96 !important; }
+    .key:active {
+      background: #777;
+      transform: translateY(1px);
+    }
+    .special {
+      flex: 1.5;
+      background: #4a3c1c;
+    }
+    .wide {
+      flex: 3;
+    }
+    .fkey {
+      font-size: 0.8em;
+      font-weight: normal;
+    }
+    .shift-active {
+      background: #c96 !important;
+    }
   </style>
 </head>
 <body>
@@ -72,7 +95,6 @@
       <div class="key fkey" onclick="pressKey(120)">F9</div>
       <div class="key fkey" onclick="pressKey(121)">F10</div>
     </div>
-
     <!-- Numbers row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(49)">1</div>
@@ -86,7 +108,6 @@
       <div class="key" onclick="pressKey(57)">9</div>
       <div class="key" onclick="pressKey(48)">0</div>
     </div>
-
     <!-- QWERTY row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(81)">Q</div>
@@ -100,7 +121,6 @@
       <div class="key" onclick="pressKey(79)">O</div>
       <div class="key" onclick="pressKey(80)">P</div>
     </div>
-
     <!-- ASDF row -->
     <div class="key-row">
       <div class="key" onclick="pressKey(65)">A</div>
@@ -114,7 +134,6 @@
       <div class="key" onclick="pressKey(76)">L</div>
       <div class="key special" onclick="pressKey(13)">⏎</div>
     </div>
-
     <!-- ZXCV row -->
     <div class="key-row">
       <div id="shift-key" class="key special" onclick="toggleShift()">⇧</div>
@@ -127,7 +146,6 @@
       <div class="key" onclick="pressKey(77)">M</div>
       <div class="key special" onclick="pressKey(8)">⌫</div>
     </div>
-
     <!-- Space + symbols -->
     <div class="key-row">
       <div class="key" onclick="pressKey(190)">.</div>
@@ -142,146 +160,88 @@
   </div>
 
   <script>
-    const dosRoot = document.getElementById('dos-root');
-    let ci = null;                       // js-dos client (not used for key sending now, kept for audio checks)
+    const dosRoot = document.getElementById("dos-root");
+    let ci = null;
     let shiftActive = false;
-    const shiftKeyEl = document.getElementById('shift-key');
 
-    // support either exported name (try global Dos first, then JS_DOS)
-    const DosFactory = window.Dos || window.JS_DOS;
-    if (!DosFactory) {
-      console.warn('js-dos factory not found (window.Dos / window.JS_DOS). The emulator may not start.');
-    } else {
-      DosFactory(dosRoot, { wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js' })
-        .ready((fs, main) => {
-          // change basic.zip to your archive (gwbasic.zip) containing GWBASIC.EXE if needed
-          fs.extract('basic.zip').then(() => {
-            main(['-c','mount d .','-c','d:','-c','cd gwbasic','-c','gwbasic'])
-              .then(client => { ci = client; })
-              .catch(e => console.warn('main() error', e));
-          }).catch(e => console.warn('fs.extract error', e));
-        });
-    }
+    Dos(dosRoot, {
+      wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+    }).ready((fs, main) => {
+      fs.extract("basic.zip").then(() => {
+        main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
+          .then(client => ci = client);
+      });
+    });
 
-    // Robust simulateKeyEvent: try KeyboardEvent constructor then fallback to initKeyboardEvent/initKeyEvent
     function simulateKeyEvent(keyCode, pressed) {
-      const eventType = pressed ? 'keydown' : 'keyup';
-      let event;
-      try {
-        // preferred modern constructor
-        event = new KeyboardEvent(eventType, {
-          bubbles: true,
-          cancelable: true,
-          key: undefined,
-          char: undefined,
-          shiftKey: false,
-          keyCode: keyCode,
-          which: keyCode
-        });
-        // Some browsers ignore provided keyCode with constructor -> patch below
-      } catch (err) {
-        // fallback to createEvent
-        event = document.createEvent('KeyboardEvent');
-        if (event.initKeyboardEvent) {
-          try {
-            event.initKeyboardEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
-          } catch (e) {
-            // fallback to initKeyEvent
-            try {
-              event.initKeyEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
-            } catch (ee) { /* ignore */ }
-          }
-        } else {
-          try {
-            event.initKeyEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
-          } catch (ee) { /* ignore */ }
-        }
+      const eventType = pressed ? "keydown" : "keyup";
+      const event = document.createEvent("KeyboardEvent");
+
+      if (event.initKeyboardEvent) {
+        event.initKeyboardEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
+      } else {
+        event.initKeyEvent(eventType, true, true, window, false, false, false, false, keyCode, 0);
       }
 
-      // Patch keyCode + which (most reliable approach)
-      try {
-        Object.defineProperty(event, 'keyCode', { get: () => keyCode });
-      } catch (e) { /* ignore if readonly */ }
-      try {
-        Object.defineProperty(event, 'which', { get: () => keyCode });
-      } catch (e) { /* ignore if readonly */ }
+      Object.defineProperty(event, "keyCode", { get: () => keyCode });
+      Object.defineProperty(event, "which", { get: () => keyCode });
 
       document.dispatchEvent(event);
     }
 
     function toggleShift() {
       shiftActive = !shiftActive;
-      shiftKeyEl.classList.toggle('shift-active', shiftActive);
+      document.getElementById("shift-key").classList.toggle("shift-active", shiftActive);
     }
 
-    // Shifted mapping for non-letter keys (keyCode -> shiftedKeyCode)
-    const shiftedMap = {
-      49: 33,    // 1 -> !
-      50: 64,    // 2 -> @
-      51: 35,    // 3 -> #
-      52: 36,    // 4 -> $
-      53: 37,    // 5 -> %
-      54: 94,    // 6 -> ^
-      55: 38,    // 7 -> &
-      56: 42,    // 8 -> *
-      57: 40,    // 9 -> (
-      48: 41,    // 0 -> )
-      186: 58,   // ; -> :
-      222: 34,   // ' -> "
-      188: 60,   // , -> <
-      190: 62,   // . -> >
-      191: 63,   // / -> ?
-      189: 95,   // - -> _
-      187: 43    // = -> +
-    };
-
-    // pressKey now uses only simulateKeyEvent (browser-level) and uses toupper for alphabets when shiftActive
     function pressKey(code) {
-      // Letters: ensure touppercase when shiftActive
-      if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
-        // derive character, then toUpper/toLower as needed
-        const ch = String.fromCharCode(code);
-        const outChar = shiftActive ? ch.toUpperCase() : ch.toLowerCase();
-        const outCode = outChar.charCodeAt(0);
-        simulateKeyEvent(outCode, true);
-        simulateKeyEvent(outCode, false);
-        // reset shift like Android single-use toggle
-        if (shiftActive) {
-          shiftActive = false;
-          shiftKeyEl.classList.remove('shift-active');
-        }
-        if (navigator.vibrate) navigator.vibrate(20);
-        return;
-      }
-
-      // Non-letter: use shiftedMap when shift active
-      let finalCode = code;
       if (shiftActive) {
-        if (shiftedMap[code]) finalCode = shiftedMap[code];
-        // reset shift after one use
+        const shiftedMap = {
+          49: 33,   // 1 → !
+          50: 64,   // 2 → @
+          51: 35,   // 3 → #
+          52: 36,   // 4 → $
+          53: 37,   // 5 → %
+          54: 94,   // 6 → ^
+          55: 38,   // 7 → &
+          56: 42,   // 8 → *
+          57: 40,   // 9 → (
+          48: 41,   // 0 → )
+          186: 58,  // ; → :
+          222: 34,  // ' → "
+          188: 60,  // , → <
+          190: 62,  // . → >
+          191: 63,  // / → ?
+          189: 95,  // - → _
+          187: 43   // = → +
+        };
+        if (code >= 65 && code <= 90) {
+          // Already uppercase letters
+          simulateKeyEvent(code, true);
+          simulateKeyEvent(code, false);
+        } else if (shiftedMap[code]) {
+          simulateKeyEvent(shiftedMap[code], true);
+          simulateKeyEvent(shiftedMap[code], false);
+        } else {
+          simulateKeyEvent(code, true);
+          simulateKeyEvent(code, false);
+        }
         shiftActive = false;
-        shiftKeyEl.classList.remove('shift-active');
+        document.getElementById("shift-key").classList.remove("shift-active");
+      } else {
+        simulateKeyEvent(code, true);
+        simulateKeyEvent(code, false);
       }
-
-      simulateKeyEvent(finalCode, true);
-      simulateKeyEvent(finalCode, false);
 
       if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    // Chrome/Edge AudioContext resume -- resume js-dos and a local AudioContext if present
-    function resumeAudioOnGesture() {
-      // Resume local API AudioContext if any
-      if (window.__localAudioContext && (window.__localAudioContext.state === 'suspended')) {
-        window.__localAudioContext.resume().catch(()=>{});
+    // 🔊 Audio unlock
+    document.addEventListener("click", () => {
+      if (ci && ci.audioContext && ci.audioContext.state === "suspended") {
+        ci.audioContext.resume();
       }
-      // Resume js-dos internal audioContext if available
-      if (ci && ci.audioContext && (ci.audioContext.state === 'suspended')) {
-        ci.audioContext.resume().catch(()=>{});
-      }
-    }
-    document.addEventListener('click', resumeAudioOnGesture, { once: true });
-
+    }, { once: true });
   </script>
 </body>
 </html>
