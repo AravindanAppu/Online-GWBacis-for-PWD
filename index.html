@@ -1,59 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>GW-BASIC — Android-style Virtual Keyboard</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>GW-BASIC — Virtual Keyboard (keeps your template)</title>
 <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
 <style>
-  :root{
-    --bg:#000; --panel:#222; --key:#3e3e3e; --key-hover:#505050; --accent:#5b2be6; --text:#fff;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Courier New",monospace;background:var(--bg);color:var(--text)}
-  #screen{width:100vw;height:46vh;padding:8px}
-  #dos-root{width:100%;height:100%;border-radius:8px;border:2px solid #666;background:#000;display:block}
-  #kbd{width:100vw;padding:8px;background:var(--panel);display:flex;flex-direction:column;gap:8px}
-  .row{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
-  .key{background:var(--key);color:var(--text);border-radius:10px;height:52px;display:flex;align-items:center;justify-content:center;font-weight:700;user-select:none;touch-action:manipulation;border:none}
-  .key:active{transform:translateY(1px);background:var(--key-hover)}
-  .key.fkey{height:42px;font-weight:600}
-  .key.special{background:#2f2b3a}
-  .key.shift{background:#2b1a2b}
-  .key.shift.active{background:var(--accent)}
-  /* span helper: e.g. span 2 columns */
-  .span-2{grid-column:span 2}
-  .span-3{grid-column:span 3}
-  .span-4{grid-column:span 4}
-  .invis{visibility:hidden;pointer-events:none}
-  .sub{display:block;font-size:.65rem;opacity:.7;margin-top:3px}
-  @media(min-width:900px){ .key{height:56px} .key.fkey{height:46px} }
+  body{margin:0;background:#000;color:#fff;font-family:Courier,monospace;display:flex;flex-direction:column;height:100vh}
+  #screen { width:100vw; height:45vh; padding:6px; box-sizing:border-box }
+  #dos-root{width:100%;height:100%;border:2px solid #666;background:#000;display:block}
+  #keyboard-container{width:100vw;height:50vh;background:#333;display:flex;flex-direction:column;padding:6px;box-sizing:border-box;gap:6px}
+  .key-row{display:flex;gap:6px;justify-content:center}
+  .key{background:#444;color:#fff;border-radius:6px;padding:10px 8px;text-align:center;flex:1;min-width:34px;font-weight:700;cursor:pointer;user-select:none}
+  .key:active{transform:translateY(1px);background:#666}
+  .fkey{font-size:0.9rem;min-width:40px}
+  .special{background:#4a3c1c;flex:1.5}
+  .wide{flex:3}
+  .shift{background:#220022}
+  .symbol{background:#3c1361}
+  .hidden{visibility:hidden}
 </style>
 </head>
 <body>
-  <div id="screen"><canvas id="dos-root" tabindex="0"></canvas></div>
-  <div id="kbd"></div>
+
+<div id="screen"><canvas id="dos-root" tabindex="0"></canvas></div>
+
+<div id="keyboard-container">
+
+  <!-- Row 1: F1..F10 (keep template style you requested) -->
+  <div class="key-row">
+    <div class="key fkey" onclick="sendKeys(112)">F1</div>
+    <div class="key fkey" onclick="sendKeys(113)">F2</div>
+    <div class="key fkey" onclick="sendKeys(114)">F3</div>
+    <div class="key fkey" onclick="sendKeys(115)">F4</div>
+    <div class="key fkey" onclick="sendKeys(116)">F5</div>
+    <div class="key fkey" onclick="sendKeys(117)">F6</div>
+    <div class="key fkey" onclick="sendKeys(118)">F7</div>
+    <div class="key fkey" onclick="sendKeys(119)">F8</div>
+    <div class="key fkey" onclick="sendKeys(120)">F9</div>
+    <div class="key fkey" onclick="sendKeys(121)">F10</div>
+  </div>
+
+  <!-- Row 2: 1..0 -->
+  <div class="key-row" id="row2">
+    <div class="key" data-id="k1" onclick="sendKeys(this)">1</div>
+    <div class="key" data-id="k2" onclick="sendKeys(this)">2</div>
+    <div class="key" data-id="k3" onclick="sendKeys(this)">3</div>
+    <div class="key" data-id="k4" onclick="sendKeys(this)">4</div>
+    <div class="key" data-id="k5" onclick="sendKeys(this)">5</div>
+    <div class="key" data-id="k6" onclick="sendKeys(this)">6</div>
+    <div class="key" data-id="k7" onclick="sendKeys(this)">7</div>
+    <div class="key" data-id="k8" onclick="sendKeys(this)">8</div>
+    <div class="key" data-id="k9" onclick="sendKeys(this)">9</div>
+    <div class="key" data-id="k0" onclick="sendKeys(this)">0</div>
+  </div>
+
+  <!-- Row 3: qwertyuiop -->
+  <div class="key-row" id="row3">
+    <div class="key" data-id="kq" onclick="sendKeys(this)">q</div>
+    <div class="key" data-id="kw" onclick="sendKeys(this)">w</div>
+    <div class="key" data-id="ke" onclick="sendKeys(this)">e</div>
+    <div class="key" data-id="kr" onclick="sendKeys(this)">r</div>
+    <div class="key" data-id="kt" onclick="sendKeys(this)">t</div>
+    <div class="key" data-id="ky" onclick="sendKeys(this)">y</div>
+    <div class="key" data-id="ku" onclick="sendKeys(this)">u</div>
+    <div class="key" data-id="ki" onclick="sendKeys(this)">i</div>
+    <div class="key" data-id="ko" onclick="sendKeys(this)">o</div>
+    <div class="key" data-id="kp" onclick="sendKeys(this)">p</div>
+  </div>
+
+  <!-- Row 4: asdfghjkl -->
+  <div class="key-row" id="row4">
+    <div class="key" data-id="ka" onclick="sendKeys(this)">a</div>
+    <div class="key" data-id="ks" onclick="sendKeys(this)">s</div>
+    <div class="key" data-id="kd" onclick="sendKeys(this)">d</div>
+    <div class="key" data-id="kf" onclick="sendKeys(this)">f</div>
+    <div class="key" data-id="kg" onclick="sendKeys(this)">g</div>
+    <div class="key" data-id="kh" onclick="sendKeys(this)">h</div>
+    <div class="key" data-id="kj" onclick="sendKeys(this)">j</div>
+    <div class="key" data-id="kk" onclick="sendKeys(this)">k</div>
+    <div class="key" data-id="kl" onclick="sendKeys(this)">l</div>
+    <div class="key special" data-id="ENTER" onclick="sendKeys('ENTER')">ENTER</div>
+  </div>
+
+  <!-- Row 5: SHIFT, zxcvbnm, BACKSPACE -->
+  <div class="key-row" id="row5">
+    <div class="key shift" id="shiftBtn" onclick="sendKeys('SHIFT')">SHIFT</div>
+    <div class="key" data-id="kz" onclick="sendKeys(this)">z</div>
+    <div class="key" data-id="kx" onclick="sendKeys(this)">x</div>
+    <div class="key" data-id="kc" onclick="sendKeys(this)">c</div>
+    <div class="key" data-id="kv" onclick="sendKeys(this)">v</div>
+    <div class="key" data-id="kb" onclick="sendKeys(this)">b</div>
+    <div class="key" data-id="kn" onclick="sendKeys(this)">n</div>
+    <div class="key" data-id="km" onclick="sendKeys(this)">m</div>
+    <div class="key special" data-id="DEL" onclick="sendKeys('DEL')">DEL</div>
+  </div>
+
+  <!-- Row 6: numbers/symbols toggle, mostly used special char, space, mostly used special char, enter -->
+  <div class="key-row" id="row6">
+    <div class="key special" id="symToggle" onclick="toggleSym()">123</div>
+    <div class="key symbol" data-id="kspecialL" onclick="sendKeys(this)">,</div>
+    <div class="key wide special" data-id="SPACE" onclick="sendKeys('SPACE')">SPACE</div>
+    <div class="key symbol" data-id="kspecialR" onclick="sendKeys(this)">.</div>
+    <div class="key special" onclick="sendKeys('ENTER')">ENTER</div>
+  </div>
+
+</div>
 
 <script>
-/* -------------------------
-   js-dos client init
-   ------------------------- */
-const canvas = document.getElementById('dos-root');
+/* ---------------------------
+   js-dos init
+   --------------------------- */
+const dosRoot = document.getElementById('dos-root');
 let ci = null;
-Dos(canvas, { wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js' })
+Dos(dosRoot, { wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js" })
   .ready((fs, main) => {
-    // expects basic.zip in same folder or FS available
-    fs.extract('basic.zip').then(() =>
-      main(['-c','mount d .','-c','d:','-c','cd gwbasic','-c','gwbasic'])
-    ).then(client => { ci = client; console.log('DOS client ready'); });
+    fs.extract('basic.zip').then(() => {
+      return main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"]);
+    }).then(client => { ci = client; console.log('DOS ready'); });
   });
 
-/* -------------------------
-   low-level keyboard mappings
-   ------------------------- */
-const SHIFT_SCAN = 0x2A; // left-shift scan used in many examples
+/* ---------------------------
+   key mapping helpers
+   --------------------------- */
 
-// base scan codes (US layout) — used by simulateKeyEvent(scan, char, down)
+// scan map (US) to use with simulateKeyEvent(scan, char, down)
 const baseScans = {
   'a':0x1E,'b':0x30,'c':0x2E,'d':0x20,'e':0x12,'f':0x21,'g':0x22,'h':0x23,
   'i':0x17,'j':0x24,'k':0x25,'l':0x26,'m':0x32,'n':0x31,'o':0x18,'p':0x19,
@@ -65,384 +136,270 @@ const baseScans = {
   '-':0x0C, '=':0x0D, '`':0x29
 };
 
-// build charMap with shift flags (so we know which chars require shift)
+// create mapping char -> {scan, char, shift}
 const charMap = {};
 // letters
-for (let ch='a'.charCodeAt(0); ch <= 'z'.charCodeAt(0); ch++){
-  const low = String.fromCharCode(ch);
-  const up = low.toUpperCase();
-  charMap[low] = { scan: baseScans[low], char: low.charCodeAt(0), shift: false };
-  charMap[up]  = { scan: baseScans[low], char: up.charCodeAt(0), shift: true };
+for(let c='a'.charCodeAt(0); c<='z'.charCodeAt(0); c++){
+  const low = String.fromCharCode(c);
+  const up  = low.toUpperCase();
+  charMap[low] = { scan: baseScans[low], char: low.charCodeAt(0), shift:false };
+  charMap[up]  = { scan: baseScans[low], char: up.charCodeAt(0), shift:true };
 }
-// digits + shifted symbols
+// digits and shifted symbols
 const digitShift = {'1':'!','2':'@','3':'#','4':'$','5':'%','6':'^','7':'&','8':'*','9':'(','0':')'};
-for (const d of Object.keys(digitShift)){
+for(const d of Object.keys(digitShift)){
   charMap[d] = { scan: baseScans[d], char: d.charCodeAt(0), shift:false };
-  const s = digitShift[d];
-  charMap[s] = { scan: baseScans[d], char: s.charCodeAt(0), shift:true };
+  charMap[digitShift[d]] = { scan: baseScans[d], char: digitShift[d].charCodeAt(0), shift:true };
 }
 // punctuation pairs
-const punct = {
-  '-':'_', '=':'+', '`':'~',
-  '[':'{', ']':'}', '\\':'|',
-  ';':':', "'":'"', ',':'<', '.':'>', '/':'?'
-};
-for (const k of Object.keys(punct)){
+const punct = {'-':'_','=':'+','`':'~','[':'{',']':'}','\\':'|',';':':',"'":'"',',':'<','.':'>','/':'?'};
+for(const k of Object.keys(punct)){
   const v = punct[k];
-  if (baseScans[k] !== undefined){
+  if(baseScans[k] !== undefined){
     charMap[k] = { scan: baseScans[k], char: k.charCodeAt(0), shift:false };
     charMap[v] = { scan: baseScans[k], char: v.charCodeAt(0), shift:true };
   }
 }
-// space/enter/backspace
-charMap[' '] = { scan: baseScans[' '], char: 32, shift:false };
-charMap['ENTER'] = { scan: baseScans['\r'], char: 13, shift:false };
-charMap['DEL'] = { scan: baseScans['\b'], char: 8, shift:false };
+charMap[' '] = { scan: baseScans[' '], char:32, shift:false };
+charMap['ENTER'] = { scan: baseScans['\r'], char:13, shift:false };
+charMap['DEL'] = { scan: baseScans['\b'], char:8, shift:false };
 
-// For non-mapped glyphs we'll attempt a fallback to simulateKeyPress with the unicode codepoint.
-
-/* -------------------------
+/* ---------------------------
    keyboard state & pages
-   ------------------------- */
+   --------------------------- */
 let page = 'alpha'; // 'alpha' | 'sym1' | 'sym2'
-let shiftOn = false; // sticky shift
+let shiftOn = false;
 
-const kbd = document.getElementById('kbd');
+// page character definitions for easy updates
+const pages = {
+  alpha: {
+    row2: ['1','2','3','4','5','6','7','8','9','0'],
+    row3: ['q','w','e','r','t','y','u','i','o','p'],
+    row4: ['a','s','d','f','g','h','j','k','l'],
+    row5Letters: ['z','x','c','v','b','n','m'],
+    row6Left: ',', row6Right: '.'
+  },
+  alphaShift: { // how labels look when shift is on
+    row2: ['!','@','#','$','%','^','&','*','(',')'],
+    row3: ['Q','W','E','R','T','Y','U','I','O','P'],
+    row4: ['A','S','D','F','G','H','J','K','L'],
+    row5Letters: ['Z','X','C','V','B','N','M'],
+    row6Left: '<', row6Right: '>'
+  },
+  sym1: {
+    row2: ['1','2','3','4','5','6','7','8','9','0'],
+    row3: ['@','#','₹','_','&','-','+','(',')','/'],
+    row4: ['*','=','\'',':',';','!','?','%','~'], // 9 items, last will be DEL slot in row
+    row5Letters: ['1','2','3','4','5','6','7'],
+    row6Left: '.', row6Right: ','
+  },
+  sym2: {
+    row2: ['~','`','|','⋅','√','π','÷','×','§','Δ'],
+    row3: ['€','¥','$','¢','^','°','=','{','}','\\'],
+    row4: ['%','©','®','™','✓','[',']','·','•'],
+    row5Letters: ['!','@','#','$','%','^','&'],
+    row6Left: '.', row6Right: ','
+  }
+};
 
-/* -------------------------
-   helper to press keys on js-dos client
-   - tries simulateKeyEvent(scan, char, down) if available
-   - falls back to simulateKeyPress(code)
-   ------------------------- */
+/* ---------------------------
+   helper to press keys on the DOS client
+   - prefer simulateKeyEvent(scan, char, down)
+   - fallback to simulateKeyPress(code)
+   --------------------------- */
 function pressScan(scan, charCode){
   if(!ci) return;
-  try {
-    if (typeof ci.simulateKeyEvent === 'function') {
-      // key down
+  try{
+    if(typeof ci.simulateKeyEvent === 'function'){
       ci.simulateKeyEvent(scan, charCode, true);
-      // key up
       ci.simulateKeyEvent(scan, charCode, false);
-    } else if (typeof ci.simulateKeyPress === 'function') {
-      // best-effort fallback
+    } else if(typeof ci.simulateKeyPress === 'function'){
       ci.simulateKeyPress(charCode);
-    } else {
-      console.warn('client has no known key API');
     }
-  } catch(e){
-    console.warn('pressScan error', e);
-  }
+  }catch(e){ console.warn('pressScan err', e); }
 }
 
 function pressWithShift(map){
   if(!ci || !map) return;
-  try {
-    if (typeof ci.simulateKeyEvent === 'function') {
-      // shift down
-      ci.simulateKeyEvent(SHIFT_SCAN, 0, true);
-      // press the key (map.scan, map.char)
+  try{
+    if(typeof ci.simulateKeyEvent === 'function'){
+      // shift down (using left-shift scan 0x2A)
+      ci.simulateKeyEvent(0x2A, 0, true);
+      // key down/up
       ci.simulateKeyEvent(map.scan, map.char, true);
       ci.simulateKeyEvent(map.scan, map.char, false);
       // shift up
-      ci.simulateKeyEvent(SHIFT_SCAN, 0, false);
-    } else if (typeof ci.simulateKeyPress === 'function') {
-      // fallback: attempt to press shift key code (16), then the keycode
+      ci.simulateKeyEvent(0x2A, 0, false);
+    } else if(typeof ci.simulateKeyPress === 'function'){
+      // fallback: press 16 (VK_SHIFT) then char then 16 again
       ci.simulateKeyPress(16);
       ci.simulateKeyPress(map.char);
-      // no reliable shift-up; try another 16 to toggle back
+      // try to toggle shift back
       ci.simulateKeyPress(16);
-    } else {
-      console.warn('no key API fallback');
     }
-  } catch(e){
-    console.warn('pressWithShift error', e);
-  }
+  }catch(e){ console.warn('pressWithShift err', e); }
 }
 
-/* -------------------------
-   layouts generator
-   - returns array of rows with objects: {label, out, span, classes}
-   ------------------------- */
-function makeFkeysRow(){
-  const row = [];
-  for(let i=1;i<=10;i++){
-    row.push({label:'F'+i, out:'F'+i, classes:'fkey'});
-  }
-  return row;
+/* ---------------------------
+   update all visible labels based on page/shift
+   --------------------------- */
+function updateLabels(){
+  // row2
+  const row2 = (page === 'alpha') ? (shiftOn ? pages.alphaShift.row2 : pages.alpha.row2)
+             : (page === 'sym1' ? pages.sym1.row2 : pages.sym2.row2);
+  const row3 = (page === 'alpha') ? (shiftOn ? pages.alphaShift.row3 : pages.alpha.row3)
+             : (page === 'sym1' ? pages.sym1.row3 : pages.sym2.row3);
+  const row4 = (page === 'alpha') ? (shiftOn ? pages.alphaShift.row4 : pages.alpha.row4)
+             : (page === 'sym1' ? pages.sym1.row4 : pages.sym2.row4);
+  const row5Letters = (page === 'alpha') ? (shiftOn ? pages.alphaShift.row5Letters : pages.alpha.row5Letters)
+             : (page === 'sym1' ? pages.sym1.row5Letters : pages.sym2.row5Letters);
+  const row6Left = (page === 'alpha') ? (shiftOn ? pages.alphaShift.row6Left : pages.alpha.row6Left)
+                 : (page === 'sym1' ? pages.sym1.row6Left : pages.sym2.row6Left);
+  const row6Right = (page === 'alpha') ? (shiftOn ? pages.alphaShift.row6Right : pages.alpha.row6Right)
+                 : (page === 'sym1' ? pages.sym1.row6Right : pages.sym2.row6Right);
+
+  // assign row2 keys (k1..k0)
+  const r2ids = ['k1','k2','k3','k4','k5','k6','k7','k8','k9','k0'];
+  for(let i=0;i<10;i++){ const el = document.querySelector('[data-id="'+r2ids[i]+'"]'); if(el) el.textContent = row2[i]; el && (el.dataset.char = row2[i]); }
+
+  // row3 q..p
+  const r3ids = ['kq','kw','ke','kr','kt','ky','ku','ki','ko','kp'];
+  for(let i=0;i<10;i++){ const el = document.querySelector('[data-id="'+r3ids[i]+'"]'); if(el) el.textContent = row3[i]; el && (el.dataset.char = row3[i]); }
+
+  // row4 a..l (9 keys) - the 10th is ENTER
+  const r4ids = ['ka','ks','kd','kf','kg','kh','kj','kk','kl'];
+  for(let i=0;i<9;i++){ const el = document.querySelector('[data-id="'+r4ids[i]+'"]'); if(el) el.textContent = row4[i]; el && (el.dataset.char = row4[i]); }
+
+  // row5 letters z..m (7 keys) and shift/del remain
+  const r5ids = ['kz','kx','kc','kv','kb','kn','km'];
+  for(let i=0;i<7;i++){ const el = document.querySelector('[data-id="'+r5ids[i]+'"]'); if(el) el.textContent = row5Letters[i]; el && (el.dataset.char = row5Letters[i]); }
+
+  // row6 mostly-used symbols left/right and sym toggle label
+  document.getElementById('symToggle').textContent = (page==='alpha')? '123' : (page==='sym1' ? 'sym2' : 'ABC');
+  const left = document.querySelector('[data-id="kspecialL"]'); if(left){ left.textContent = row6Left; left.dataset.char = row6Left; }
+  const right = document.querySelector('[data-id="kspecialR"]'); if(right){ right.textContent = row6Right; right.dataset.char = row6Right; }
+
+  // shift button visual
+  const shiftBtn = document.getElementById('shiftBtn');
+  shiftBtn.textContent = shiftOn ? 'SHIFT ON' : 'SHIFT';
+  shiftBtn.classList.toggle('active', shiftOn);
 }
 
-function layoutAlpha(){
-  // row2 depends on shift
-  const row2 = [];
-  if(!shiftOn){
-    for(let i=1;i<=9;i++) row2.push({label:String(i), out:String(i)});
-    row2.push({label:'0', out:'0'});
-  } else {
-    const sy = ['!','@','#','$','%','^','&','*','(',')'];
-    for(const s of sy) row2.push({label:s, out:s});
-  }
-
-  const row3 = 'qwertyuiop'.split('').map(c => ({label: shiftOn ? c.toUpperCase() : c, out: shiftOn ? c.toUpperCase() : c}));
-  // row4: asdfghjkl -> 9 keys, pad one invisible at end
-  const row4 = 'asdfghjkl'.split('').map(c => ({label: shiftOn? c.toUpperCase() : c, out: shiftOn? c.toUpperCase() : c}));
-  row4.push({label:'', out:null, classes:'invis'}); // pad to 10 columns
-
-  // row5: SHIFT (span 2), zxcvbnm (7 keys), DEL (span1)
-  const row5 = [];
-  row5.push({label:'SHIFT', out:'SHIFT', classes:'shift span-2'});
-  const letters = 'zxcvbnm'.split('');
-  for(const c of letters) row5.push({label: shiftOn ? c.toUpperCase() : c, out: shiftOn? c.toUpperCase() : c});
-  row5.push({label:'DEL', out:'DEL', classes:'special'});
-
-  // row6: numbers/symbols toggle, left-most special, space wide, right special, ENTER
-  const row6 = [
-    {label:'123', out:'TOGGLE_SYM', classes:'special'},       // toggle
-    {label:'.', out:'.'},                                     // left special (mostly used)
-    {label:'SPACE', out:' ', classes:'special span-6'},       // space
-    {label:',', out:','},                                     // right special
-    {label:'ENTER', out:'ENTER', classes:'special'}           // enter
-  ];
-
-  return [makeFkeysRow(), row2, row3, row4, row5, row6];
+/* ---------------------------
+   toggle between alpha -> sym1 -> sym2 -> alpha
+   --------------------------- */
+function toggleSym(){
+  if(page === 'alpha') page = 'sym1';
+  else if(page === 'sym1') page = 'sym2';
+  else page = 'alpha';
+  updateLabels();
 }
 
-function layoutSym1(){
-  // sym1 page per spec:
-  // row2: 1234567890
-  const row2 = [];
-  for(let i=1;i<=9;i++) row2.push({label:String(i), out:String(i)});
-  row2.push({label:'0', out:'0'});
-
-  // row3: @#₹_&-+()/
-  const row3chars = ['@','#','₹','_','&','-','+','(',')','/'];
-  const row3 = row3chars.map(c => ({label:c, out:c}));
-
-  // row4: 2nd-level toggle, then "*=':;!?,", then backspace
-  const row4chars = ['*','=',"'",':',';','!','? ',','];
-  // note: ensure 8 items after toggle then DEL -> total 10
-  const row4 = [];
-  row4.push({label:'2nd', out:'TOGGLE_SYM2', classes:'special'}); // toggle
-  const seq = ['*','=','\'',':',';','!','? ',','];
-  for(const s of seq) row4.push({label:s.trim(), out:s.trim()}); // trimming stray spaces
-  row4.push({label:'DEL', out:'DEL', classes:'special'});
-
-  // row5 bottom: same pattern as alpha
-  const row5 = [
-    {label:'ABC', out:'TOGGLE_ALPHA', classes:'special'},
-    {label:'.', out:'.'},
-    {label:'SPACE', out:' ', classes:'special span-6'},
-    {label:',', out:','},
-    {label:'ENTER', out:'ENTER', classes:'special'}
-  ];
-
-  return [makeFkeysRow(), row2, row3, row4, row5, row5]; // pad last row for consistent number rows (row index not important)
-}
-
-function layoutSym2(){
-  // sym2 per spec
-  const row2chars = ['~','`','|','⋅','√','π','÷','×','§','Δ'];
-  const row2 = row2chars.map(c => ({label:c, out:c}));
-
-  const row3chars = ['€','¥','$','¢','^','°','=','{','}','\\'];
-  const row3 = row3chars.map(c => ({label:c, out:c}));
-
-  const row4 = [];
-  // first col: back to sym1
-  row4.push({label:'1st', out:'TOGGLE_SYM1', classes:'special'});
-  // then: % © ® ™ ✓ [ ]
-  const seq = ['%','©','®','™','✓','[',']',','];
-  for(const s of seq) row4.push({label:s, out:s});
-  row4.push({label:'DEL', out:'DEL', classes:'special'});
-
-  const row5 = [
-    {label:'ABC', out:'TOGGLE_ALPHA', classes:'special'},
-    {label:'.', out:'.'},
-    {label:'SPACE', out:' ', classes:'special span-6'},
-    {label:',', out:','},
-    {label:'ENTER', out:'ENTER', classes:'special'}
-  ];
-  return [makeFkeysRow(), row2, row3, row4, row5, row5];
-}
-
-/* -------------------------
-   render keyboard into DOM
-   ------------------------- */
-function render(){
-  kbd.innerHTML = '';
-  let rows;
-  if(page === 'alpha') rows = layoutAlpha();
-  else if(page === 'sym1') rows = layoutSym1();
-  else rows = layoutSym2();
-
-  // ensure we always create exactly 6 visible row containers (as user described)
-  for(let r=0;r<6;r++){
-    const rowDef = rows[r] || [];
-    const rowEl = document.createElement('div');
-    rowEl.className = 'row';
-    // compute total columns occupancy; we will set grid spans on keys where specified.
-    let used = 0;
-    for(const k of rowDef){
-      const btn = document.createElement('button');
-      btn.className = 'key';
-      if(k.classes) btn.className += ' ' + k.classes;
-      const spanMatch = (k.classes || '').match(/span-(\d)/);
-      if(spanMatch){
-        const sp = parseInt(spanMatch[1],10);
-        btn.style.gridColumn = `span ${sp}`;
-        used += sp;
-      } else {
-        btn.style.gridColumn = 'span 1';
-        used += 1;
-      }
-
-      // label: if shiftOn and it's a letter row & in alpha page, show uppercase
-      btn.dataset.out = k.out ?? '';
-      btn.innerHTML = `<div>${k.label||''}</div>`;
-      if(k.shiftLabel) btn.innerHTML += `<span class="sub">${k.shiftLabel}</span>`;
-
-      // invisible placeholders
-      if(k.classes && k.classes.indexOf('invis') >= 0){
-        btn.classList.add('invis');
-      }
-
-      // handlers
-      btn.addEventListener('click', ()=> onKeyPress(k));
-      rowEl.appendChild(btn);
-    }
-    // pad remaining empty cells to maintain layout alignment
-    while(used < 10){
-      const pad = document.createElement('div');
-      pad.className = 'key invis';
-      pad.style.gridColumn = 'span 1';
-      rowEl.appendChild(pad);
-      used++;
-    }
-    kbd.appendChild(rowEl);
-  }
-  // update shift button visual
-  updateShiftVisual();
-}
-
-/* -------------------------
-   update shift button look (it is a button inside wherever label 'SHIFT' placed)
-   ------------------------- */
-function updateShiftVisual(){
-  // find all keys with label SHIFT and toggle active class
-  const keys = Array.from(kbd.querySelectorAll('.key'));
-  keys.forEach(k => {
-    const out = k.dataset.out;
-    if(out === 'SHIFT'){
-      if(shiftOn) k.classList.add('active'); else k.classList.remove('active');
-      k.textContent = shiftOn ? 'SHIFT ⬆' : 'SHIFT';
-    }
-    // labels: in alpha mode we want letters to show caps when shiftOn (render recreated each time)
-  });
-}
-
-/* -------------------------
-   keypress handler (UI -> produce char)
-   ------------------------- */
-function onKeyPress(def){
-  // special actions:
-  if(!def) return;
-  const out = def.out;
-
+/* ---------------------------
+   main sendKeys handler
+   - accepts number (F-key code or ascii) OR element (this) OR special strings
+   --------------------------- */
+function sendKeys(arg){
+  if(!ci) return;
   // haptic
-  if(navigator.vibrate) navigator.vibrate(12);
+  navigator.vibrate?.(18);
 
-  // page toggles
-  if(out === 'TOGGLE_SYM'){
-    page = 'sym1'; render(); return;
-  }
-  if(out === 'TOGGLE_SYM2'){
-    page = 'sym2'; render(); return;
-  }
-  if(out === 'TOGGLE_SYM1'){
-    page = 'sym1'; render(); return;
-  }
-  if(out === 'TOGGLE_ALPHA'){
-    page = 'alpha'; render(); return;
-  }
-
-  if(out === 'SHIFT'){
-    shiftOn = !shiftOn;
-    // NOTE: shift is sticky; re-render so letter labels and number row update
-    render();
-    return;
-  }
-
-  if(typeof out === 'string' && out.startsWith('F')){
-    // F1..F10 -> send via simulateKeyPress fallback
-    const idx = parseInt(out.slice(1),10);
-    const code = 111 + idx; // F1=112, F2=113...
-    if(ci && typeof ci.simulateKeyPress === 'function'){
-      try{ ci.simulateKeyPress(code); } catch(e){ console.warn(e); }
-    }
-    return;
-  }
-
-  // handle DELETE / ENTER / SPACE etc
-  if(out === 'DEL'){
-    // backspace
-    const map = charMap['DEL'];
-    if(map && typeof ci?.simulateKeyEvent === 'function'){ pressScan(map.scan,map.char); return; }
-    if(typeof ci?.simulateKeyPress === 'function'){ ci.simulateKeyPress(8); return; }
-    return;
-  }
-  if(out === 'ENTER'){
-    const map = charMap['ENTER'];
-    if(map && typeof ci?.simulateKeyEvent === 'function'){ pressScan(map.scan,map.char); return; }
-    if(typeof ci?.simulateKeyPress === 'function'){ ci.simulateKeyPress(13); return; }
-    return;
-  }
-  if(out === ' '){
-    const map = charMap[' '];
-    if(map && typeof ci?.simulateKeyEvent === 'function'){ pressScan(map.scan,map.char); return; }
-    if(typeof ci?.simulateKeyPress === 'function'){ ci.simulateKeyPress(32); return; }
-    return;
-  }
-
-  // Normal printable characters:
-  // Note: when page === 'alpha' the buttons were set to out: lower or upper depending on shiftOn.
-  // For characters that are produced by shift combinations (like '!'), charMap[char].shift === true.
-  const ch = out; // requested character
-  if(!ch) return;
-
-  // If we have a charMap entry, use scan-level sending
-  const map = charMap[ch];
-  if(map){
-    // If the mapped char is flagged shift (like '!' is shift on '1'), send shift + key
-    if(map.shift){
-      pressWithShift(map);
-    } else {
-      pressScan(map.scan, map.char);
-    }
-    return;
-  }
-
-  // Fallback: if char code fits in 0..255 we attempt simulateKeyPress with char code
-  try {
-    const code = ch.charCodeAt(0);
-    if(typeof ci?.simulateKeyPress === 'function'){
-      ci.simulateKeyPress(code);
+  // numeric F-keys (112..121) or ascii code passed directly
+  if(typeof arg === 'number'){
+    // F-keys
+    if(arg >= 112 && arg <= 123){
+      try{ if(typeof ci.simulateKeyPress === 'function') ci.simulateKeyPress(arg); else pressScan(arg,arg); }catch(e){console.warn(e);}
       return;
     }
-  } catch(e){ /* ignore */ }
+    // treat number as ascii code
+    arg = String.fromCharCode(arg);
+  }
 
-  console.warn('No mapping for character', ch);
+  // if element passed (onclick="sendKeys(this)")
+  if(arg instanceof Element){
+    const ch = arg.dataset && arg.dataset.char ? arg.dataset.char : arg.textContent;
+    _sendCharacter(ch);
+    return;
+  }
+
+  // if string passed (e.g. 'ENTER', 'DEL', 'SPACE', 'SHIFT')
+  if(typeof arg === 'string'){
+    const token = arg;
+    // special tokens
+    if(token === 'SHIFT'){ shiftOn = !shiftOn; updateLabels(); return; }
+    if(token === 'DEL'){ // backspace
+      const map = charMap['DEL'];
+      if(map) pressScan(map.scan,map.char);
+      else if(typeof ci.simulateKeyPress === 'function') ci.simulateKeyPress(8);
+      return;
+    }
+    if(token === 'ENTER'){
+      const map = charMap['ENTER'];
+      if(map) pressScan(map.scan,map.char);
+      else if(typeof ci.simulateKeyPress === 'function') ci.simulateKeyPress(13);
+      return;
+    }
+    if(token === 'SPACE'){
+      const map = charMap[' '];
+      if(map) pressScan(map.scan,map.char);
+      else if(typeof ci.simulateKeyPress === 'function') ci.simulateKeyPress(32);
+      return;
+    }
+    if(token === 'TOGGLE_SYM') { toggleSym(); return; }
+
+    // otherwise treat token as a printable char
+    _sendCharacter(token);
+    return;
+  }
 }
 
-/* -------------------------
-   initial render and focus handling
-   ------------------------- */
-render();
-kbd.addEventListener('click', ()=> canvas.focus());
-kbd.addEventListener('touchstart', ()=> canvas.focus(), {passive:true});
-canvas.addEventListener('click', ()=> canvas.focus());
+// internal: send a printable character (single char string)
+function _sendCharacter(ch){
+  if(!ch || ch.length === 0) return;
+  // if user toggled Shift separately, we prefer shiftOn state (one-shot) rather than input-case
+  // If the visible label is uppercase but shiftOn is false, label will be uppercase only if page/shift caused it.
+  // We'll consult charMap for direct mapping.
+  const mapDirect = charMap[ch];
+  if(mapDirect){
+    if(mapDirect.shift){
+      // this character is produced with Shift (e.g. '!' -> shift+1)
+      pressWithShift(mapDirect);
+    } else {
+      // printable without shift, except when shiftOn is true and it's a letter -> we need uppercase
+      if(shiftOn && /^[a-z]$/.test(ch)){
+        const upper = ch.toUpperCase();
+        const mapU = charMap[upper];
+        if(mapU) pressWithShift(mapU);
+        else pressScan(mapDirect.scan,mapDirect.char);
+      } else {
+        pressScan(mapDirect.scan,mapDirect.char);
+      }
+    }
+  } else {
+    // not in charMap (likely special/unicode). fallback to sending char code if possible
+    try{
+      const code = ch.charCodeAt(0);
+      if(typeof ci.simulateKeyPress === 'function'){
+        ci.simulateKeyPress(code);
+      } else {
+        console.warn('no simulateKeyPress available for fallback');
+      }
+    }catch(e){ console.warn('fallback send char failed', e); }
+  }
 
-/* -------------------------
-   Expose small debug helpers (optional)
-   ------------------------- */
-window._vk = { render, setPage: p=>{page=p;render()}, toggleShift: ()=>{shiftOn=!shiftOn;render()} };
+  // if shift is one-shot, auto-reset on character press
+  if(shiftOn){
+    shiftOn = false;
+    updateLabels();
+  }
+}
+
+/* ---------------------------
+   initial label setup and focus
+   --------------------------- */
+updateLabels();
+document.getElementById('keyboard-container')?.addEventListener('click', ()=> dosRoot.focus());
+dosRoot.addEventListener('click', ()=> dosRoot.focus());
 
 </script>
 </body>
