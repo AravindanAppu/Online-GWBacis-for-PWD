@@ -46,6 +46,7 @@
     const nativeInput = document.getElementById("native-input");
     let ci = null;
 
+    // Initialize DOSBox
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
@@ -62,7 +63,7 @@
       });
     });
 
-    // Forward mobile keyboard characters (handle all chars, not just last one)
+    // Printable characters (letters, numbers, symbols)
     nativeInput.addEventListener("input", (e) => {
       if (!ci) return;
       const val = e.target.value;
@@ -71,11 +72,49 @@
           const ch = val[i];
           ci.simulateKeyPress(ch.charCodeAt(0));
         }
-        e.target.value = ""; // clear after sending
+        e.target.value = ""; // clear buffer
       }
     });
 
-    // Refocus on canvas tap
+    // Control keys (Enter, Backspace, Arrows, etc.)
+    nativeInput.addEventListener("keydown", (e) => {
+      if (!ci) return;
+
+      switch (e.key) {
+        case "Enter":
+          ci.simulateKeyEvent(0x1C, 13, true);
+          ci.simulateKeyEvent(0x1C, 13, false);
+          e.preventDefault();
+          break;
+        case "Backspace":
+          ci.simulateKeyEvent(0x0E, 8, true);
+          ci.simulateKeyEvent(0x0E, 8, false);
+          e.preventDefault();
+          break;
+        case "ArrowUp":
+          ci.simulateKeyEvent(0x48, 0, true);
+          ci.simulateKeyEvent(0x48, 0, false);
+          e.preventDefault();
+          break;
+        case "ArrowDown":
+          ci.simulateKeyEvent(0x50, 0, true);
+          ci.simulateKeyEvent(0x50, 0, false);
+          e.preventDefault();
+          break;
+        case "ArrowLeft":
+          ci.simulateKeyEvent(0x4B, 0, true);
+          ci.simulateKeyEvent(0x4B, 0, false);
+          e.preventDefault();
+          break;
+        case "ArrowRight":
+          ci.simulateKeyEvent(0x4D, 0, true);
+          ci.simulateKeyEvent(0x4D, 0, false);
+          e.preventDefault();
+          break;
+      }
+    });
+
+    // Refocus on canvas when tapping
     dosRoot.addEventListener("click", () => {
       nativeInput.focus();
     });
