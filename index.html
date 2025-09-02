@@ -62,14 +62,16 @@
       });
     });
 
-    // Forward mobile keyboard characters
+    // Forward mobile keyboard characters (handle all chars, not just last one)
     nativeInput.addEventListener("input", (e) => {
       if (!ci) return;
       const val = e.target.value;
       if (val.length > 0) {
-        const ch = val.slice(-1);
-        ci.simulateKeyPress(ch.charCodeAt(0));
-        e.target.value = "";
+        for (let i = 0; i < val.length; i++) {
+          const ch = val[i];
+          ci.simulateKeyPress(ch.charCodeAt(0));
+        }
+        e.target.value = ""; // clear after sending
       }
     });
 
