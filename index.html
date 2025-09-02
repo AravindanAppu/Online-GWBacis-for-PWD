@@ -96,7 +96,7 @@ body {
     <div class="key fkey" onclick="sendKeys(121)">F10</div>
   </div>
 
-  <!-- Numbers -->
+  <!-- Numbers + symbols -->
   <div class="key-row">
     <div class="key" onclick="sendKeys(49)">1</div>
     <div class="key" onclick="sendKeys(50)">2</div>
@@ -108,6 +108,8 @@ body {
     <div class="key" onclick="sendKeys(56)">8</div>
     <div class="key" onclick="sendKeys(57)">9</div>
     <div class="key" onclick="sendKeys(48)">0</div>
+    <div class="key symbol" onclick="sendKeys(189)">-</div>
+    <div class="key symbol" onclick="sendKeys(187)">=</div>
   </div>
 
   <!-- QWERTY row -->
@@ -122,6 +124,9 @@ body {
     <div class="key" onclick="sendKeys(73)">I</div>
     <div class="key" onclick="sendKeys(79)">O</div>
     <div class="key" onclick="sendKeys(80)">P</div>
+    <div class="key symbol" onclick="sendKeys(219)">[</div>
+    <div class="key symbol" onclick="sendKeys(221)">]</div>
+    <div class="key symbol" onclick="sendKeys(220)">\</div>
   </div>
 
   <!-- ASDF row -->
@@ -135,6 +140,8 @@ body {
     <div class="key" onclick="sendKeys(74)">J</div>
     <div class="key" onclick="sendKeys(75)">K</div>
     <div class="key" onclick="sendKeys(76)">L</div>
+    <div class="key symbol" onclick="sendKeys(186)">;</div>
+    <div class="key symbol" onclick="sendKeys(222)">'</div>
     <div class="key special" onclick="sendKeys(13)">ENTER</div>
   </div>
 
@@ -148,6 +155,9 @@ body {
     <div class="key" onclick="sendKeys(66)">B</div>
     <div class="key" onclick="sendKeys(78)">N</div>
     <div class="key" onclick="sendKeys(77)">M</div>
+    <div class="key symbol" onclick="sendKeys(188)">,</div>
+    <div class="key symbol" onclick="sendKeys(190)">.</div>
+    <div class="key symbol" onclick="sendKeys(191)">/</div>
     <div class="key special" onclick="sendKeys(8)">DEL</div>
   </div>
 
@@ -162,13 +172,6 @@ body {
 const dosRoot = document.getElementById("dos-root");
 let ci = null;
 let shiftOn = false;
-
-// Shift symbol mapping
-const shiftedMap = {
-  49: "!", 50: "@", 51: "#", 52: "$", 53: "%",
-  54: "^", 55: "&", 56: "*", 57: "(", 48: ")",
-  186: ":", 222: "\"", 188: "<", 190: ">", 191: "?"
-};
 
 Dos(dosRoot, {
   wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
@@ -187,7 +190,6 @@ function toggleShift(){
 function sendKeys(code){
   if(!ci) return;
 
-  // Handle shifted characters
   if (shiftOn) {
     ci.simulateKeyEvent({type: "keydown", code: 16}); // Shift down
     ci.simulateKeyPress(code);
@@ -198,7 +200,6 @@ function sendKeys(code){
     ci.simulateKeyPress(code);
   }
 
-  // haptic feedback
   if (navigator.vibrate) navigator.vibrate(30);
 }
 </script>
