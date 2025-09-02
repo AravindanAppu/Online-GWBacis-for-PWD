@@ -73,6 +73,9 @@ body {
   font-size: 0.8em;
   font-weight: normal;
 }
+.shift-on {
+  background: #660066 !important;
+}
 </style>
 </head>
 <body>
@@ -82,78 +85,69 @@ body {
 
 <div id="keyboard-container">
 
-  <!-- Function keys -->
+  <!-- Numbers row -->
   <div class="key-row">
-    <div class="key fkey" onclick="sendKeys(112)">F1</div>
-    <div class="key fkey" onclick="sendKeys(113)">F2</div>
-    <div class="key fkey" onclick="sendKeys(114)">F3</div>
-    <div class="key fkey" onclick="sendKeys(115)">F4</div>
-    <div class="key fkey" onclick="sendKeys(116)">F5</div>
-    <div class="key fkey" onclick="sendKeys(117)">F6</div>
-    <div class="key fkey" onclick="sendKeys(118)">F7</div>
-    <div class="key fkey" onclick="sendKeys(119)">F8</div>
-    <div class="key fkey" onclick="sendKeys(120)">F9</div>
-    <div class="key fkey" onclick="sendKeys(121)">F10</div>
-  </div>
-
-  <!-- Numbers -->
-  <div class="key-row">
-    <div class="key" onclick="sendKeys(49)">1</div>
-    <div class="key" onclick="sendKeys(50)">2</div>
-    <div class="key" onclick="sendKeys(51)">3</div>
-    <div class="key" onclick="sendKeys(52)">4</div>
-    <div class="key" onclick="sendKeys(53)">5</div>
-    <div class="key" onclick="sendKeys(54)">6</div>
-    <div class="key" onclick="sendKeys(55)">7</div>
-    <div class="key" onclick="sendKeys(56)">8</div>
-    <div class="key" onclick="sendKeys(57)">9</div>
-    <div class="key" onclick="sendKeys(48)">0</div>
+    <div class="key" data-key="1">1</div>
+    <div class="key" data-key="2">2</div>
+    <div class="key" data-key="3">3</div>
+    <div class="key" data-key="4">4</div>
+    <div class="key" data-key="5">5</div>
+    <div class="key" data-key="6">6</div>
+    <div class="key" data-key="7">7</div>
+    <div class="key" data-key="8">8</div>
+    <div class="key" data-key="9">9</div>
+    <div class="key" data-key="0">0</div>
   </div>
 
   <!-- QWERTY row -->
   <div class="key-row">
-    <div class="key" onclick="sendKeys(81)">Q</div>
-    <div class="key" onclick="sendKeys(87)">W</div>
-    <div class="key" onclick="sendKeys(69)">E</div>
-    <div class="key" onclick="sendKeys(82)">R</div>
-    <div class="key" onclick="sendKeys(84)">T</div>
-    <div class="key" onclick="sendKeys(89)">Y</div>
-    <div class="key" onclick="sendKeys(85)">U</div>
-    <div class="key" onclick="sendKeys(73)">I</div>
-    <div class="key" onclick="sendKeys(79)">O</div>
-    <div class="key" onclick="sendKeys(80)">P</div>
+    <div class="key" data-key="Q">Q</div>
+    <div class="key" data-key="W">W</div>
+    <div class="key" data-key="E">E</div>
+    <div class="key" data-key="R">R</div>
+    <div class="key" data-key="T">T</div>
+    <div class="key" data-key="Y">Y</div>
+    <div class="key" data-key="U">U</div>
+    <div class="key" data-key="I">I</div>
+    <div class="key" data-key="O">O</div>
+    <div class="key" data-key="P">P</div>
   </div>
 
   <!-- ASDF row -->
   <div class="key-row">
-    <div class="key" onclick="sendKeys(65)">A</div>
-    <div class="key" onclick="sendKeys(83)">S</div>
-    <div class="key" onclick="sendKeys(68)">D</div>
-    <div class="key" onclick="sendKeys(70)">F</div>
-    <div class="key" onclick="sendKeys(71)">G</div>
-    <div class="key" onclick="sendKeys(72)">H</div>
-    <div class="key" onclick="sendKeys(74)">J</div>
-    <div class="key" onclick="sendKeys(75)">K</div>
-    <div class="key" onclick="sendKeys(76)">L</div>
-    <div class="key special" onclick="sendKeys(13)">ENTER</div>
+    <div class="key" data-key="A">A</div>
+    <div class="key" data-key="S">S</div>
+    <div class="key" data-key="D">D</div>
+    <div class="key" data-key="F">F</div>
+    <div class="key" data-key="G">G</div>
+    <div class="key" data-key="H">H</div>
+    <div class="key" data-key="J">J</div>
+    <div class="key" data-key="K">K</div>
+    <div class="key" data-key="L">L</div>
+    <div class="key special" data-key="ENTER">ENTER</div>
   </div>
 
   <!-- ZXCV row -->
   <div class="key-row">
-    <div class="key shift" onclick="toggleShift()" id="shift-btn">SHIFT</div>
-    <div class="key" onclick="sendKeys(90)">Z</div>
-    <div class="key" onclick="sendKeys(88)">X</div>
-    <div class="key" onclick="sendKeys(67)">C</div>
-    <div class="key" onclick="sendKeys(86)">V</div>
-    <div class="key" onclick="sendKeys(66)">B</div>
-    <div class="key" onclick="sendKeys(78)">N</div>
-    <div class="key" onclick="sendKeys(77)">M</div>
-    <div class="key special" onclick="sendKeys(8)">DEL</div>
+    <div class="key shift" id="shift-btn" onclick="toggleShift()">SHIFT</div>
+    <div class="key" data-key="Z">Z</div>
+    <div class="key" data-key="X">X</div>
+    <div class="key" data-key="C">C</div>
+    <div class="key" data-key="V">V</div>
+    <div class="key" data-key="B">B</div>
+    <div class="key" data-key="N">N</div>
+    <div class="key" data-key="M">M</div>
+    <div class="key special" data-key="DEL">DEL</div>
   </div>
 
-  <!-- Space row -->
+  <!-- Symbols + Space -->
   <div class="key-row">
-    <div class="key wide special" onclick="sendKeys(32)">SPACE</div>
+    <div class="key symbol" data-key=";">;</div>
+    <div class="key symbol" data-key="'">'</div>
+    <div class="key symbol" data-key=",">,</div>
+    <div class="key symbol" data-key=".">.</div>
+    <div class="key symbol" data-key="/">/</div>
+    <div class="key wide special" data-key="SPACE">SPACE</div>
   </div>
 
 </div>
@@ -162,6 +156,18 @@ body {
 const dosRoot = document.getElementById("dos-root");
 let ci = null;
 let shiftOn = false;
+
+// Map normal vs shifted characters
+const keyMap = {
+  "1": ["1", "!"], "2": ["2", "@"], "3": ["3", "#"], "4": ["4", "$"],
+  "5": ["5", "%"], "6": ["6", "^"], "7": ["7", "&"], "8": ["8", "*"],
+  "9": ["9", "("], "0": ["0", ")"],
+  ";": [";", ":"], "'": ["'", "\""], ",": [",", "<"], ".": [".", ">"],
+  "/": ["/", "?"],
+  "SPACE": [" ", " "],
+  "ENTER": ["\r", "\r"],
+  "DEL": ["\b", "\b"]
+};
 
 Dos(dosRoot, {
   wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
@@ -174,12 +180,33 @@ Dos(dosRoot, {
 
 function toggleShift(){
   shiftOn = !shiftOn;
-  document.getElementById("shift-btn").textContent = shiftOn ? "SHIFT ON" : "SHIFT";
+  document.getElementById("shift-btn").classList.toggle("shift-on", shiftOn);
 }
-function sendKeys(code){
+
+function sendKeys(char){
   if(!ci) return;
+  navigator.vibrate?.(20); // haptic feedback
+  let output = char;
+
+  if(keyMap[char]){
+    output = shiftOn ? keyMap[char][1] : keyMap[char][0];
+  } else if(char.length === 1){
+    output = shiftOn ? char.toUpperCase() : char.toLowerCase();
+  }
+
+  const code = output.charCodeAt(0);
   ci.simulateKeyPress(code);
+
+  if(shiftOn && char.length === 1){ // auto-reset shift like mobile keyboard
+    toggleShift();
+  }
 }
+
+// Attach to all keys
+document.querySelectorAll(".key").forEach(k=>{
+  if(!k.dataset.key) return;
+  k.addEventListener("click", ()=>sendKeys(k.dataset.key));
+});
 </script>
 </body>
 </html>
