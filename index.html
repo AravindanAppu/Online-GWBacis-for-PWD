@@ -11,35 +11,52 @@
       margin: 0;
       height: 100vh;
       overflow: hidden;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     #dos-root {
       width: 100vw;
       height: 60vh;
       border: 2px solid #666;
     }
-    #overlay-input {
+    #mobile-keyboard {
       position: absolute;
-      top: 0; left: 0;
-      width: 100vw; height: 60vh;
-      opacity: 0.01;
-      z-index: 10;
-      font-size: 32px;
-      border: none; background: transparent;
-      color: black;
-      resize: none;
+      bottom: 0;
+      width: 100%;
+      height: 40vh;
+      background: #222;
+      color: white;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      visibility: hidden;
     }
   </style>
 </head>
 <body>
   <canvas id="dos-root"></canvas>
-  <textarea id="overlay-input" autofocus></textarea>
+  <div id="mobile-keyboard">
+    <div id="output">Ready.</div>
+  </div>
+  <textarea id="overlay-input" autofocus style="opacity: 0; z-index: 5;"></textarea>
+  
   <script>
+    // --- DOM Elements ---
     const dosRoot = document.getElementById("dos-root");
     const overlayInput = document.getElementById("overlay-input");
+    const mobileKeyboard = document.getElementById("mobile-keyboard");
+    const outputDisplay = document.getElementById("output");
     let ci = null;
     let lastValue = "";
-
+    let capsLock = false;
+    let shiftPressed = false;
+    
+    // --- JS-DOS Initialization ---
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
@@ -55,44 +72,95 @@
         });
       });
     });
-
-    overlayInput.addEventListener("input", (e) => {
+    
+    // --- Keyboard Input Handling ---
+    overlayInput.addEventListener('input', (e) => {
       if (!ci) return;
-      let value = e.target.value;
-
-      // Find added text
-      let added = "";
-      if (value.length > lastValue.length) {
-        added = value.slice(lastValue.length);
-      } else if (lastValue.length > value.length) {
-        // Handle backspace/delete
-        // Optionally, send Backspace key: ci.simulateKeyPress(8);
-      }
+      
+      const value = e.target.value;
+      const added = value.slice(lastValue.length);
       lastValue = value;
-
-      // Send each character in 'added'
-      for (let i = 0; i < added.length; i++) {
-        const ch = added[i];
-        if (ch === "\n" || ch === "\r") {
-          ci.simulateKeyPress(13); // Enter
+      
+      if (!added) return;
+      
+      // Process each character
+      for (const char of added) {
+        if (char === "\n" || char === "\r") {
+          sendKey(13); // Enter
+          return;
+        }
+        
+        // Handle shift state
+        const keyUpper = char.toUpperCase();
+        const keyLower = char.toLowerCase();
+        
+        if (keyUpper !== keyLower) {
+          if (capsLock === shiftPressed) {
+            sendKey(getKeycode(keyUpper));
+          } else {
+            sendKey(getKeycode(keyLower) | 0x80); // Shift flag
+          }
         } else {
-          ci.simulateKeyPress(ch.charCodeAt(0));
+          sendKey(getKeycode(char));
         }
       }
-
-      // If Enter pressed, clear all
-      if (added.includes("\n") || added.includes("\r")) {
-        overlayInput.value = "";
-        lastValue = "";
-      }
+      
+      // Clear input after processing
+      e.target.value = '';
     });
-
+    
+    // --- Helper Functions ---
+    function sendKey(code) {
+      if (ci) {
+        ci.simulateKeyPress(code);
+        updateDisplay(String.fromCharCode(code));
+      }
+    }
+    
+    function getKeycode(char) {
+      // Basic DOS keycode mapping
+      const keymap = {
+        'A': 30, 'B': 48, 'C': 46, 'D': 32, 'E': 18, 'F': 33, 'G': 34, 
+        'H': 35, 'I': 23, 'J': 36, 'K': 37, 'L': 38, 'M': 50, 'N': 49, 
+        'O': 24, 'P': 25, 'Q': 16, 'R': 19, 'S': 31, 'T': 20, 'U': 22, 
+        'V': 41, 'W': 17, 'X': 45, 'Y': 21, 'Z': 44,
+        '0': 11, '1': 2, '2': 3, '3': 4, '4': 5, '5': 6, '6': 7, '7': 8, 
+        '8': 9, '9': 10,
+        ' ': 57, '\r': 28, '\n': 28,
+        '!': 2, '@': 3, '#': 4, '$': 5, '%': 6, '^': 7, '&': 8, '*': 9, 
+        '(': 11, ')': 12,
+        '<': 44, '>': 45, '?': 47, '/': 47, '[': 42, ']': 43, '{': 42, 
+        '}': 43, '\\': 58
+      };
+      
+      return keymap[char] || 0;
+    }
+    
+    function updateDisplay(text) {
+      outputDisplay.textContent += text;
+    }
+    
+    // --- Focus Management ---
     dosRoot.addEventListener("click", () => {
       overlayInput.focus();
     });
-
+    
     overlayInput.addEventListener("blur", () => {
       setTimeout(() => overlayInput.focus(), 300);
+    });
+    
+    // --- Mobile Keyboard Simulation (Optional) ---
+    // This is just for visual feedback - JS-DOS input still goes through JS-DOS
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'CapsLock') {
+        capsLock = !capsLock;
+        outputDisplay.textContent += capsLock ? "Caps ON" : "Caps OFF";
+      }
+      if (e.key === 'Shift') shiftPressed = true;
+    });
+    
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'Shift') shiftPressed = false;
     });
   </script>
 </body>
