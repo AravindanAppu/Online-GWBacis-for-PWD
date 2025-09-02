@@ -24,12 +24,9 @@ body {
   border: 2px solid #666;
 }
 #keyboard-container {
-  position: fixed;
-  bottom: 0;
   width: 100vw;
   height: 50vh;
   background: #333;
-  border-radius: 2rem 2rem 0 0; /* mimic curved mobile edge */
   display: flex;
   flex-direction: column;
   padding: 4px;
@@ -45,7 +42,7 @@ body {
 .key {
   background: #444;
   color: white;
-  font-size: 1.2em;
+  font-size: 1.1em;
   font-weight: bold;
   text-align: center;
   border-radius: 6px;
@@ -59,23 +56,9 @@ body {
   background: #777;
   transform: translateY(1px);
 }
-.special {
-  flex: 1.5;
-  background: #4a3c1c;
-}
-.wide {
-  flex: 3;
-}
-.shift {
-  background: #220022;
-}
-.symbol {
-  background: #3c1361;
-}
-.fkey {
-  font-size: 0.8em;
-  font-weight: normal;
-}
+.special { flex: 1.5; background: #4a3c1c; }
+.wide { flex: 3; }
+.fkey { font-size: 0.8em; font-weight: normal; }
 </style>
 </head>
 <body>
@@ -99,7 +82,7 @@ body {
     <div class="key fkey" onclick="sendKeys(121)">F10</div>
   </div>
 
-  <!-- Numbers -->
+  <!-- Numbers row -->
   <div class="key-row">
     <div class="key" onclick="sendKeys(49)">1</div>
     <div class="key" onclick="sendKeys(50)">2</div>
@@ -143,7 +126,7 @@ body {
 
   <!-- ZXCV row -->
   <div class="key-row">
-    <div class="key shift" onclick="toggleShift()" id="shift-btn">SHIFT</div>
+    <div class="key special" onclick="sendKeys(16)">SHIFT</div>
     <div class="key" onclick="sendKeys(90)">Z</div>
     <div class="key" onclick="sendKeys(88)">X</div>
     <div class="key" onclick="sendKeys(67)">C</div>
@@ -154,9 +137,16 @@ body {
     <div class="key special" onclick="sendKeys(8)">DEL</div>
   </div>
 
-  <!-- Space row -->
+  <!-- Space + basic symbols -->
   <div class="key-row">
+    <div class="key" onclick="sendKeys(190)">.</div>
+    <div class="key" onclick="sendKeys(188)">,</div>
+    <div class="key" onclick="sendKeys(191)">/</div>
     <div class="key wide special" onclick="sendKeys(32)">SPACE</div>
+    <div class="key" onclick="sendKeys(186)">;</div>
+    <div class="key" onclick="sendKeys(222)">'</div>
+    <div class="key" onclick="sendKeys(189)">-</div>
+    <div class="key" onclick="sendKeys(187)">=</div>
   </div>
 
 </div>
@@ -164,15 +154,6 @@ body {
 <script>
 const dosRoot = document.getElementById("dos-root");
 let ci = null;
-let shiftActive = false;
-
-// Shifted symbols mapping
-const shiftedSymbols = {
-  49: "!", 50: "@", 51: "#", 52: "$", 53: "%",
-  54: "^", 55: "&", 56: "*", 57: "(", 48: ")",
-  186: ":", 222: "\"", 188: "<", 190: ">", 191: "?",
-  187: "+", 189: "_", 192: "~"
-};
 
 Dos(dosRoot, {
   wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
@@ -183,35 +164,10 @@ Dos(dosRoot, {
   });
 });
 
-function toggleShift() {
-  shiftActive = true;
-  document.getElementById("shift-btn").textContent = "SHIFT ON";
-}
-
-function sendKeys(code) {
-  if (!ci) return;
-
-  if (shiftActive) {
-    // Letters → already uppercase ASCII
-    if (code >= 65 && code <= 90) {
-      ci.sendKeys(code);
-    }
-    // Symbols → map to shifted char
-    else if (shiftedSymbols[code]) {
-      const char = shiftedSymbols[code];
-      ci.sendKeys(char.charCodeAt(0));
-    } else {
-      ci.sendKeys(code);
-    }
-    // reset shift
-    shiftActive = false;
-    document.getElementById("shift-btn").textContent = "SHIFT";
-  } else {
-    ci.sendKeys(code);
-  }
-
-  // haptic feedback
-  if (navigator.vibrate) navigator.vibrate(30);
+function sendKeys(code){
+  if(!ci) return;
+  ci.simulateKeyPress(code);
+  if (navigator.vibrate) navigator.vibrate(20);
 }
 </script>
 </body>
