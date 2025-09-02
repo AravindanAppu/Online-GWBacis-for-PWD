@@ -128,8 +128,8 @@ let shiftActive = false;
 
 Dos(canvas, { wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js" })
   .ready((fs, main) => {
-    fs.extract("digger.zip").then(() => {
-      main(["-c","DIGGER.COM"]).then(client => ci = client);
+    fs.extract("basic.zip").then(() => {
+      main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"]).then(client => ci = client);
     });
   });
 
@@ -165,3 +165,4 @@ function toggleShift() {
 </script>
 </body>
 </html>
+
