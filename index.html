@@ -2,43 +2,153 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>GW-BASIC in Browser</title>
-  <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+  <title>GW-BASIC w/ Virtual Keyboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
   <style>
     body {
       background: black;
       margin: 0;
       height: 100vh;
       overflow: hidden;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0;
+      font-family: 'Courier New', monospace;
+    }
+    #screen-container {
+      width: 100vw;
+      height: 45vh;
+      position: relative;
     }
     #dos-root {
-      width: 100vw;
-      height: 60vh;
+      width: 100%;
+      height: 100%;
       border: 2px solid #666;
     }
-    #overlay-input {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100vw; height: 60vh;
-      opacity: 0.01;
-      z-index: 10;
-      font-size: 32px;
-      border: none; background: transparent;
-      color: black;
-      resize: none;
+    #keyboard-container {
+      width: 100vw;
+      height: 46vh;
+      background: #333;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-gap: 2px;
+      padding: 2px;
+      box-sizing: border-box;
+    }
+    .key {
+      background: #444;
+      color: #ccc;
+      font-size: 1.4em;
+      text-align: center;
+      border: 1px solid #222;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .key:hover {
+      background: #555 !important;
+    }
+    .key:active {
+      background: #777 !important;
+      transform: translateY(1px);
+    }
+    #fkeys-holder {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+    #key-space {
+      grid-column: span 6;
+    }
+    #key-return {
+      grid-column: span 2;
+    }
+    #key-backspace {
+      grid-column: span 2;
     }
   </style>
 </head>
 <body>
-  <canvas id="dos-root"></canvas>
-  <textarea id="overlay-input" autofocus></textarea>
+  <div id="screen-container">
+    <canvas id="dos-root"></canvas>
+  </div>
+  <div id="keyboard-container">
+
+    <!-- Row 0: F-keys (set grid for these below) -->
+    <div id="fkeys-holder">
+       <div data-code="112" onclick="sendKeys(112)">F1</div>
+       <div data-code="113" onclick="sendKeys(113)">F2</div>
+       <div data-code="114" onclick="sendKeys(114)">F3</div>
+       <div data-code="115" onclick="sendKeys(115)">F4</div>
+       <!-- More F-keys (F5-F10) can be added similarly here if needed -->
+    </div>
+
+    <!-- Row 1: Numbers -->
+    <div data-code="49" class="key" onclick="sendKeys(49)">1</div>
+    <div data-code="50" class="key" onclick="sendKeys(50)">2</div>
+    <div data-code="51" class="key" onclick="sendKeys(51)">3</div>
+    <div data-code="52" class="key" onclick="sendKeys(52)">4</div>
+    <div data-code="53" class="key" onclick="sendKeys(53)">5</div>
+    <div data-code="54" class="key" onclick="sendKeys(54)">6</div>
+    <div data-code="55" class="key" onclick="sendKeys(55)">7</div>
+    <div data-code="56" class="key" onclick="sendKeys(56)">8</div>
+    <div data-code="57" class="key" onclick="sendKeys(57)">9</div>
+    <div data-code="48" class="key" onclick="sendKeys(48)">0</div>
+
+    <!-- Row 2: First letters -->   
+    <div data-code="81" class="key" onclick="sendKeys(81)">Q</div>
+    <div data-code="87" class="key" onclick="sendKeys(87)">W</div>
+    <div data-code="69" class="key" onclick="sendKeys(69)">E</div>
+    <div data-code="82" class="key" onclick="sendKeys(82)">R</div>
+    <div data-code="84" class="key" onclick="sendKeys(84)">T</div>
+    <div data-code="89" class="key" onclick="sendKeys(89)">Y</div>
+    <div data-code="85" class="key" onclick="sendKeys(85)">U</div>
+    <div data-code="73" class="key" onclick="sendKeys(73)">I</div>
+    <div data-code="79" class="key" onclick="sendKeys(79)">O</div>
+    <div data-code="80" class="key" onclick="sendKeys(80)">P</div>
+
+    <!-- Row 3: More letters -->
+    <div data-code="65" class="key" onclick="sendKeys(65)">A</div>
+    <div data-code="83" class="key" onclick="sendKeys(83)">S</div>
+    <div data-code="68" class="key" onclick="sendKeys(68)">D</div>
+    <div data-code="70" class="key" onclick="sendKeys(70)">F</div>
+    <div data-code="71" class="key" onclick="sendKeys(71)">G</div>
+    <div data-code="72" class="key" onclick="sendKeys(72)">H</div>
+    <div data-code="74" class="key" onclick="sendKeys(74)">J</div>
+    <div data-code="75" class="key" onclick="sendKeys(75)">K</div>
+    <div data-code="76" class="key" onclick="sendKeys(76)">L</div>
+    <div id="key-return" data-code="13" class="key" onclick="sendKeys(13)">ENTER</div>
+
+    <!-- Row 4: Last letters + Shift -->
+    <div data-code="16" class="key" onclick="sendKeys(16)">SHIFT</div>
+    <div data-code="90" class="key" onclick="sendKeys(90)">Z</div>
+    <div data-code="88" class="key" onclick="sendKeys(88)">X</div>
+    <div data-code="67" class="key" onclick="sendKeys(67)">C</div>
+    <div data-code="86" class="key" onclick="sendKeys(86)">V</div>
+    <div data-code="66" class="key" onclick="sendKeys(66)">B</div>
+    <div data-code="78" class="key" onclick="sendKeys(78)">N</div>
+    <div data-code="77" class="key" onclick="sendKeys(77)">M</div>
+    <div id="key-backspace" data-code="8" class="key" onclick="sendKeys(8)">DEL</div>
+    
+    <!-- Row 5 -->
+    <div data-code="192" class="key" onclick="sendKeys(192)">`~</div>
+    <div data-code="189" class="key" onclick="sendKeys(189)">[-</div>
+    <div data-code="187" class="key" onclick="sendKeys(187)">=+</div>
+    <div id="key-space" data-code="32" class="key" onclick="sendKeys(32)">SPACE</div>
+    <div data-code="219" class="key" onclick="sendKeys(219)">{</div>
+    <div data-code="221" class="key" onclick="sendKeys(221)">}</div>
+    <div data-code="186" class="key" onclick="sendKeys(186)">;|</div>
+    <div data-code="190" class="key" onclick="sendKeys(190)">.</div>
+
+  </div>
   <script>
     const dosRoot = document.getElementById("dos-root");
-    const overlayInput = document.getElementById("overlay-input");
     let ci = null;
 
+    // Setup JS-DOS:
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
@@ -50,31 +160,19 @@
           "-c", "gwbasic"
         ]).then((client) => {
           ci = client;
-          overlayInput.focus();
         });
       });
     });
 
-    overlayInput.addEventListener("input", (e) => {
+    // Send keys on (virtual) key press:
+    function sendKeys(keyCode) {
       if (!ci) return;
-      let value = overlayInput.value;
-      for (let i = 0; i < value.length; i++) {
-        let ch = value[i];
-        if (ch === "\n" || ch === "\r") {
-          ci.simulateKeyPress(13);
-        } else {
-          ci.simulateKeyPress(ch.charCodeAt(0));
-        }
-      }
-      overlayInput.value = ""; // Always clear after sending!
-    });
+      ci.simulateKeyPress(keyCode);
+    }
 
-    dosRoot.addEventListener("click", () => {
-      overlayInput.focus();
-    });
-
-    overlayInput.addEventListener("blur", () => {
-      setTimeout(() => overlayInput.focus(), 300);
+    // Handle virtual keyboard tap (mobile and desktop) by focusing the container:
+    document.getElementById("keyboard-container").addEventListener("click", () => {
+      dosRoot.focus();
     });
   </script>
 </body>
