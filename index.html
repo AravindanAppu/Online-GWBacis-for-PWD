@@ -1,168 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>GW-BASIC Virtual Keyboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-<style>
-body {
-  background: black;
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  font-family: 'Courier New', monospace;
-}
-#screen-container {
-  flex: 1;
-  width: 100vw;
-  max-height: 50vh;
-}
-#dos-root {
-  width: 100%;
-  height: 100%;
-  border: 2px solid #666;
-}
-#keyboard-container {
-  width: 100vw;
-  background: #222;
-  display: flex;
-  flex-direction: column;
-  padding: 4px;
-  gap: 4px;
-  box-sizing: border-box;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-}
-.key-row {
-  display: flex;
-  justify-content: center;
-  gap: 4px;
-}
-.key {
-  background: #444;
-  color: white;
-  font-size: 1.1em;
-  font-weight: bold;
-  text-align: center;
-  border-radius: 6px;
-  flex: 1;
-  min-width: 32px;
-  padding: 10px 0;
-  cursor: pointer;
-  user-select: none;
-}
-.key:active {
-  background: #777;
-  transform: translateY(1px);
-}
-.special { flex: 1.5; background: #4a3c1c; }
-.wide { flex: 3; }
-.fkey { font-size: 0.8em; font-weight: normal; }
-</style>
-</head>
-<body>
-<div id="screen-container">
-  <canvas id="dos-root"></canvas>
-</div>
-
-<div id="keyboard-container">
-  <!-- QWERTY row -->
-  <div class="key-row">
-    <div class="key" onclick="sendKeys(81)">Q</div>
-    <div class="key" onclick="sendKeys(87)">W</div>
-    <div class="key" onclick="sendKeys(69)">E</div>
-    <div class="key" onclick="sendKeys(82)">R</div>
-    <div class="key" onclick="sendKeys(84)">T</div>
-    <div class="key" onclick="sendKeys(89)">Y</div>
-    <div class="key" onclick="sendKeys(85)">U</div>
-    <div class="key" onclick="sendKeys(73)">I</div>
-    <div class="key" onclick="sendKeys(79)">O</div>
-    <div class="key" onclick="sendKeys(80)">P</div>
-  </div>
-
-  <!-- ASDF row -->
-  <div class="key-row">
-    <div class="key" onclick="sendKeys(65)">A</div>
-    <div class="key" onclick="sendKeys(83)">S</div>
-    <div class="key" onclick="sendKeys(68)">D</div>
-    <div class="key" onclick="sendKeys(70)">F</div>
-    <div class="key" onclick="sendKeys(71)">G</div>
-    <div class="key" onclick="sendKeys(72)">H</div>
-    <div class="key" onclick="sendKeys(74)">J</div>
-    <div class="key" onclick="sendKeys(75)">K</div>
-    <div class="key" onclick="sendKeys(76)">L</div>
-    <div class="key special" onclick="sendKeys(13)">⏎</div>
-  </div>
-
-  <!-- ZXCV row -->
-  <div class="key-row">
-    <div class="key special" onclick="toggleShift()">⇧</div>
-    <div class="key" onclick="sendKeys(90)">Z</div>
-    <div class="key" onclick="sendKeys(88)">X</div>
-    <div class="key" onclick="sendKeys(67)">C</div>
-    <div class="key" onclick="sendKeys(86)">V</div>
-    <div class="key" onclick="sendKeys(66)">B</div>
-    <div class="key" onclick="sendKeys(78)">N</div>
-    <div class="key" onclick="sendKeys(77)">M</div>
-    <div class="key special" onclick="sendKeys(8)">⌫</div>
-  </div>
-
-  <!-- Space row -->
-  <div class="key-row">
-    <div class="key" onclick="sendKeys(188)">,</div>
-    <div class="key" onclick="sendKeys(190)">.</div>
-    <div class="key" onclick="sendKeys(191)">/</div>
-    <div class="key wide special" onclick="sendKeys(32)">SPACE</div>
-    <div class="key" onclick="sendKeys(222)">'</div>
-    <div class="key" onclick="sendKeys(189)">-</div>
-    <div class="key" onclick="sendKeys(187)">=</div>
-  </div>
-</div>
-
 <script>
-const canvas = document.getElementById("dos-root");
+const dosRoot = document.getElementById("dos-root");
 let ci = null;
-let shiftActive = false;
+let shiftActive = false; // ✅ Track shift toggle
+const shiftKeyEl = document.getElementById("shift-key");
 
-Dos(canvas, { wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js" })
-  .ready((fs, main) => {
-    fs.extract("basic.zip").then(() => {
-      main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"]).then(client => ci = client);
-    });
+Dos(dosRoot, {
+  wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+}).ready((fs, main) => {
+  fs.extract("basic.zip").then(() => {
+    main(["-c","mount d .","-c","d:","-c","cd gwbasic","-c","gwbasic"])
+      .then(client => ci = client);
   });
+});
 
-const keyMap = {
-  65: {normal:97, shift:65}, 66:{normal:98, shift:66}, 67:{normal:99, shift:67},
-  68:{normal:100, shift:68}, 69:{normal:101, shift:69}, 70:{normal:102, shift:70},
-  71:{normal:103, shift:71}, 72:{normal:104, shift:72}, 73:{normal:105, shift:73},
-  74:{normal:106, shift:74}, 75:{normal:107, shift:75}, 76:{normal:108, shift:76},
-  77:{normal:109, shift:77}, 78:{normal:110, shift:78}, 79:{normal:111, shift:79},
-  80:{normal:112, shift:80}, 81:{normal:113, shift:81}, 82:{normal:114, shift:82},
-  83:{normal:115, shift:83}, 84:{normal:116, shift:84}, 85:{normal:117, shift:85},
-  86:{normal:118, shift:86}, 87:{normal:119, shift:87}, 88:{normal:120, shift:88},
-  89:{normal:121, shift:89}, 90:{normal:122, shift:90},
+// 🔑 Low-level key event generator
+function simulateKeyEvent(keyCode, pressed) {
+  const eventType = pressed ? "keydown" : "keyup";
+  const event = document.createEvent("KeyboardEvent");
 
-  188:{normal:44, shift:60}, 190:{normal:46, shift:62}, 191:{normal:47, shift:63},
-  222:{normal:39, shift:34}, 189:{normal:45, shift:95}, 187:{normal:61, shift:43}
-};
+  if (event.initKeyboardEvent) {
+    event.initKeyboardEvent(
+      eventType, true, true, window,
+      false, false, false, false,
+      keyCode, 0
+    );
+  } else {
+    event.initKeyEvent(
+      eventType, true, true, window,
+      false, false, false, false,
+      keyCode, 0
+    );
+  }
+
+  // Patch keyCode + which so DOSBox can see correct codes
+  Object.defineProperty(event, "keyCode", { get: () => keyCode });
+  Object.defineProperty(event, "which", { get: () => keyCode });
+
+  document.dispatchEvent(event);
+}
+
+// 🔑 Press + release in one call
+function simulateKeyPress(keyCode) {
+  simulateKeyEvent(keyCode, true);
+  simulateKeyEvent(keyCode, false);
+}
 
 function sendKeys(code) {
   if (!ci) return;
 
-  let key = keyMap[code];
-  let outCode = key ? (shiftActive ? key.shift : key.normal) : code;
-  ci.simulateKeyPress(outCode);
+  if (code === 16) { 
+    // Toggle SHIFT
+    shiftActive = !shiftActive;
+    shiftKeyEl.classList.toggle("shift-active", shiftActive);
+    return;
+  }
 
-  if (shiftActive) shiftActive = false; // reset shift like Android
+  if (shiftActive) {
+    if (code >= 65 && code <= 90) {
+      simulateKeyPress(code); // already uppercase
+    } else {
+      const shiftedMap = {
+        49: 33,   // 1 → !
+        50: 64,   // 2 → @
+        51: 35,   // 3 → #
+        52: 36,   // 4 → $
+        53: 37,   // 5 → %
+        54: 94,   // 6 → ^
+        55: 38,   // 7 → &
+        56: 42,   // 8 → *
+        57: 40,   // 9 → (
+        48: 41,   // 0 → )
+        186: 58,  // ; → :
+        222: 34,  // ' → "
+        188: 60,  // , → <
+        190: 62,  // . → >
+        191: 63,  // / → ?
+        189: 95,  // - → _
+        187: 43   // = → +
+      };
+      if (shiftedMap[code]) {
+        simulateKeyPress(shiftedMap[code]);
+      } else {
+        simulateKeyPress(code);
+      }
+    }
+    shiftActive = false;
+    shiftKeyEl.classList.remove("shift-active");
+  } else {
+    simulateKeyPress(code);
+  }
+
   if (navigator.vibrate) navigator.vibrate(20);
 }
 
-function toggleShift() {
-  shiftActive = !shiftActive;
-}
+// 🔊 Fix for AudioContext autoplay policy
+document.addEventListener("click", () => {
+  if (ci && ci.audioContext && ci.audioContext.state === "suspended") {
+    ci.audioContext.resume();
+  }
+}, { once: true });
 </script>
-</body>
-</html>
-
