@@ -16,14 +16,11 @@
       height: 100vh;
       overflow: hidden;
     }
-
     #dos-root {
       width: 100vw;
       height: 60vh;
       border: 2px solid #666;
     }
-
-    /* Fullscreen invisible input */
     #native-input {
       position: absolute;
       top: 0;
@@ -46,7 +43,7 @@
     const nativeInput = document.getElementById("native-input");
     let ci = null;
 
-    // Initialize DOSBox
+    // Start DOSBox
     Dos(dosRoot, {
       wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
     }).ready((fs, main) => {
@@ -63,22 +60,11 @@
       });
     });
 
-    // Printable characters (letters, numbers, symbols)
-    nativeInput.addEventListener("input", (e) => {
-      if (!ci) return;
-      const val = e.target.value;
-      if (val.length > 0) {
-        for (let i = 0; i < val.length; i++) {
-          const ch = val[i];
-          ci.simulateKeyPress(ch.charCodeAt(0));
-        }
-        e.target.value = ""; // clear buffer
-      }
-    });
-
-    // Control keys (Enter, Backspace, Arrows, etc.)
+    // Listen only to keydown for all inputs
     nativeInput.addEventListener("keydown", (e) => {
       if (!ci) return;
+
+      const code = e.key.charCodeAt(0);
 
       switch (e.key) {
         case "Enter":
@@ -111,10 +97,17 @@
           ci.simulateKeyEvent(0x4D, 0, false);
           e.preventDefault();
           break;
+        default:
+          if (e.key.length === 1) {
+            // Normal characters
+            ci.simulateKeyEvent(code, code, true);
+            ci.simulateKeyEvent(code, code, false);
+          }
+          break;
       }
     });
 
-    // Refocus on canvas when tapping
+    // Keep focus on tap
     dosRoot.addEventListener("click", () => {
       nativeInput.focus();
     });
