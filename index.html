@@ -1,170 +1,245 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GW‑BASIC – JS‑DOS with Soft Keyboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0,
-       maximum-scale=1.0, user-scalable=no">
+<title>GW-BASIC w/ Android-Style Virtual Keyboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-
 <style>
-    body {
-        margin:0; background:#000; color:#ccc;
-        font-family:"Courier New",monospace;
-        height:100vh; overflow:hidden;
-        display:flex; flex-direction:column;
-        align-items:center; justify-content:center;
-    }
-    #dos-root { width:100vw; height:45vh; border:2px solid #666; }
-    #keyboard { width:100vw; height:55vh; background:#333;
-        display:grid; grid-template-columns:repeat(10,1fr);
-        gap:2px; padding:2px; box-sizing:border-box; }
-    .key {
-        background:#444; border:1px solid #222; border-radius:4px;
-        font-size:1.3em; color:#ccc; display:flex;
-        align-items:center; justify-content:center;
-        user-select:none; -webkit-user-select:none;
-        cursor:pointer; transition:background .1s;
-    }
-    .key:active { background:#777; transform:translateY(1px); }
-    .key { background:#555; }
+body {
+ background: black;
+ margin:0;
+ height:100vh;
+ overflow: hidden;
+ padding:0;
+ font-family: 'Courier New', monospace;
+ }
+#screen-container {
+ width:100vw;
+ height:45vh;
+ position: relative;
+ }
+#dos-root {
+ width:100%;
+ height:100%;
+ border:2px solid #666;
+ }
+#keyboard-container {
+ width:100vw;
+ height:46vh;
+ background: #333;
+ display: grid;
+ grid-template-columns: repeat(10,1fr);
+ grid-gap:2px;
+ padding:2px;
+ box-sizing: border-box;
+ }
+.key {
+ background: #444;
+ color: white; /* Brighter text like Android */
+ font-size:1.3em;
+ font-weight: bold;
+ text-align: center;
+ border:none; /* No borders for cleaner look */
+ border-radius:4px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ min-height:40px; /* Consistent size */
+ transition: all0.1s;
+ }
+.key:hover {
+ background: #555 !important;
+ }
+.key:active {
+ background: #777 !important;
+ transform: translateY(1px);
+ }
+#fkeys-holder {
+ display: flex;
+ flex-direction: row;
+ flex-wrap: wrap;
+ gap:2px;
+ }
+#key-space {
+ grid-column: span6;
+ }
+#key-return {
+ grid-column: span2;
+ }
+#key-backspace {
+ grid-column: span2;
+ }
+.shift, .symbol, .special {
+ background: #220022;
+ }
+.symbol {
+ background: #3c1361;
+ font-size:1.2em;
+ }
+.special {
+ background: #4a3c1c;
+ }
+/* F-keys styling smaller text and uppercase */
+.fkey {
+ font-size:0.85em;
+ font-weight: normal;
+ letter-spacing:0.4px;
+ }
 </style>
 </head>
-
 <body>
-    <canvas id="dos-root"></canvas>
-    <div id="keyboard"></div>
+<div id="screen-container">
+<canvas id="dos-root"></canvas>
+</div>
+<div id="keyboard-container">
 
+<!-- Row0: ALL Function keys F1-F12 -->
+<div id="fkeys-holder">
+<div data-code="112" class="key shift fkey" onclick="sendKeys(112)">F1</div>
+<div data-code="113" class="key shift fkey" onclick="sendKeys(113)">F2</div>
+<div data-code="114" class="key shift fkey" onclick="sendKeys(114)">F3</div>
+<div data-code="115" class="key shift fkey" onclick="sendKeys(115)">F4</div>
+<div data-code="116" class="key shift fkey" onclick="sendKeys(116)">F5</div>
+<div data-code="117" class="key shift fkey" onclick="sendKeys(117)">F6</div>
+<div data-code="118" class="key shift fkey" onclick="sendKeys(118)">F7</div>
+<div data-code="119" class="key shift fkey" onclick="sendKeys(119)">F8</div>
+<div data-code="120" class="key shift fkey" onclick="sendKeys(120)">F9</div>
+<div data-code="121" class="key shift fkey" onclick="sendKeys(121)">F10</div>
+<div data-code="122" class="key shift fkey" onclick="sendKeys(122)">F11</div>
+<div data-code="123" class="key shift fkey" onclick="sendKeys(123)">F12</div>
+</div>
+
+<!-- Row1: Numbers -->
+<div data-code="49" class="key" onclick="sendKeys(49)">1</div>
+<div data-code="50" class="key" onclick="sendKeys(50)">2</div>
+<div data-code="51" class="key" onclick="sendKeys(51)">3</div>
+<div data-code="52" class="key" onclick="sendKeys(52)">4</div>
+<div data-code="53" class="key" onclick="sendKeys(53)">5</div>
+<div data-code="54" class="key" onclick="sendKeys(54)">6</div>
+<div data-code="55" class="key" onclick="sendKeys(55)">7</div>
+<div data-code="56" class="key" onclick="sendKeys(56)">8</div>
+<div data-code="57" class="key" onclick="sendKeys(57)">9</div>
+<div data-code="48" class="key" onclick="sendKeys(48)">0</div>
+
+<!-- Row2: Top row symbols and letters -->
+<div data-code="192" class="key symbol" onclick="sendKeys(192)">`</div>
+<div data-code="49" class="key symbol" onclick="sendKeys(33)">!</div>
+<div data-code="50" class="key symbol" onclick="sendKeys(64)">@</div>
+<div data-code="51" class="key symbol" onclick="sendKeys(35">#</div>
+<div data-code="52" class="key symbol" onclick="sendKeys(36)">$</div>
+<div data-code="53" class="key symbol" onclick="sendKeys(37)">%</div>
+<div data-code="54" class="key symbol" onclick="sendKeys(94)">^</div>
+<div data-code="55" class="key symbol" onclick="sendKeys(38)">&</div>
+<div data-code="56" class="key symbol" onclick="sendKeys(42)">*</div>
+<div data-code="57" class="key symbol" onclick="sendKeys(40)">(
+</div>
+
+<!-- Row3: First letters -->
+<div data-code="81" class="key" onclick="sendKeys(81)">Q</div>
+<div data-code="87" class="key" onclick="sendKeys(87)">W</div>
+<div data-code="69" class="key" onclick="sendKeys(69)">E</div>
+<div data-code="82" class="key" onclick="sendKeys(82)">R</div>
+<div data-code="84" class="key" onclick="sendKeys(84)">T</div>
+<div data-code="89" class="key" onclick="sendKeys(89)">Y</div>
+<div data-code="85" class="key" onclick="sendKeys(85)">U</div>
+<div data-code="73" class="key" onclick="sendKeys(73)">I</div>
+<div data-code="79" class="key" onclick="sendKeys(79)">O</div>
+<div data-code="80" class="key" onclick="sendKeys(80)">P</div>
+
+ <!-- Row4: More letters -->
+<div data-code="65" class="key" onclick="sendKeys(65)">A</div>
+<div data-code="83" class="key" onclick="sendKeys(83)">S</div>
+<div data-code="68" class="key" onclick="sendKeys(68)">D</div>
+<div data-code="70" class="key" onclick="sendKeys(70)">F</div>
+<div data-code="71" class="key" onclick="sendKeys(71)">G</div>
+<div data-code="72" class="key" onclick="sendKeys(72)">H</div>
+<div data-code="74" class="key" onclick="sendKeys(74)">J</div>
+<div data-code="75" class="key" onclick="sendKeys(75)">K</div>
+<div data-code="76" class="key" onclick="sendKeys(76)">L</div>
+<div id="key-return" data-code="13" class="key special" onclick="sendKeys(13)">ENTER</div>
+
+<!-- Row5: Last letters and backspace -->
+<div data-code="16" class="key shift" onclick="toggleShift()"><span id="shift-text">SHIFT</span></div>
+<div id="key-z" data-code="90" class="key"
+onclick="sendKeys(document.getElementById('key-z').getAttribute('data-code'))">Z</div>
+<div id="key-x" data-code="88" class="key"
+onclick="sendKeys(document.getElementById('key-x').getAttribute('data-code'))">X</div>
+<div id="key-c" data-code="67" class="key"
+onclick="sendKeys(document.getElementById('key-c').getAttribute('data-code'))">C</div>
+<div id="key-v" data-code="86" class="key"
+onclick="sendKeys(document.getElementById('key-v').getAttribute('data-code'))">V</div>
+<div id="key-b" data-code="66" class="key"
+onclick="sendKeys(document.getElementById('key-b').getAttribute('data-code'))">B</div>
+<div id="key-n" data-code="78" class="key"
+onclick="sendKeys(document.getElementById('key-n').getAttribute('data-code'))">N</div>
+<div id="key-m" data-code="77" class="key"
+onclick="sendKeys(document.getElementById('key-m').getAttribute('data-code'))">M</div>
+<div id="key-backspace" data-code="8" class="key special" onclick="sendKeys(8)">DEL</div>
+
+<!-- Row6: Space, symbols -->
+<div data-code="219" class="key symbol" onclick="sendKeys(219)">{
+</div>
+<div data-code="221" class="key symbol" onclick="sendKeys(221)">}
+</div>
+<div data-code="220" class="key symbol" onclick="sendKeys(220)">\
+</div>
+<div id="key-space" data-code="32" class="key special" onclick="sendKeys(32)">SPACE</div>
+<div data-code="188" class="key symbol" onclick="sendKeys(44)">,</div>
+<div data-code="190" class="key symbol" onclick="sendKeys(46)">.</div>
+<div data-code="191" class="key symbol" onclick="sendKeys(47)">/</div>
+<div data-code="186" class="key symbol" onclick="sendKeys(59)">;
+</div>
+<div data-code="222" class="key symbol" onclick="sendKeys(39)">'</div>
+<!-- Add more symbols -->
+<div data-code="187" class="key symbol" onclick="sendKeys(61)">=
+</div>
+<div data-code="189" class="key symbol" onclick="sendKeys(45)">-
+</div>
+<div data-code="187" class="key symbol" onclick="sendKeys(43)">+
+</div>
+<div data-code="219" class="key symbol" onclick="sendKeys(91)">[
+</div>
+<div data-code="221" class="key symbol" onclick="sendKeys(93)">]
+</div>
+</div>
 <script>
-/* ---------- 1.  Layout definition ----------------------------------- */
-const rows = [
-    // row 0 – numbers and symbols
-    [{norm:'1',sh:'!',code:49},{norm:'2',sh:'@',code:50},
-     {norm:'3',sh:'#',code:51},{norm:'4',sh:'$',code:52},
-     {norm:'5',sh:'%',code:53},{norm:'6',sh:'^',code:54},
-     {norm:'7',sh:'&',code:55},{norm:'8',sh:'*',code:56},
-     {norm:'9',sh:'(',code:57},{norm:'0',sh:')',code:48}],
-
-    // row 1 – Q‑W‑E‑R‑T … P
-    [{norm:'Q',sh:'Q',code:81},{norm:'W',sh:'W',code:87},
-     {norm:'E',sh:'E',code:69},{norm:'R',sh:'R',code:82},
-     {norm:'T',sh:'T',code:84},{norm:'Y',sh:'Y',code:89},
-     {norm:'U',sh:'U',code:85},{norm:'I',sh:'I',code:73},
-     {norm:'O',sh:'O',code:79},{norm:'P',sh:'P',code:80}],
-
-    // row 2 – A‑S‑D‑F‑G … L
-    [{norm:'A',sh:'A',code:65},{norm:'S',sh:'S',code:83},
-     {norm:'D',sh:'D',code:68},{norm:'F',sh:'F',code:70},
-     {norm:'G',sh:'G',code:71},{norm:'H',sh:'H',code:72},
-     {norm:'J',sh:'J',code:74},{norm:'K',sh:'K',code:75},
-     {norm:'L',sh:'L',code:76},
-     {norm:'⏎',sh:'⏎',code:13,wide:2,cls:'key shift'}],
-
-    // row 3 – Z‑X‑C‑V‑B‑N‑M  + Backspace
-    [{norm:'SHIFT',sh:'SHIFT',code:16,wide:2,cls:'key shift'},
-     {norm:'Z',sh:'Z',code:90},{norm:'X',sh:'X',code:88},
-     {norm:'C',sh:'C',code:67},{norm:'V',sh:'V',code:86},
-     {norm:'B',sh:'B',code:66},{norm:'N',sh:'N',code:78},
-     {norm:'M',sh:'M',code:77},
-     {norm:'←',sh:'←',code:8,wide:2,cls:'key'}],
-
-    // row 4 – space and punctuation
-    [{norm:'`',sh:'~',code:192},
-     {norm:'[',sh:'{',code:219},
-     {norm:']',sh:'}',code:221},
-     {norm:';',sh:':',code:186},
-     {norm:"'",sh:'"',code:222},
-     {norm:',',sh:'<',code:188},
-     {norm:'.',sh:'>',code:190},
-     {norm:'/',sh:'?',code:191},
-     {norm:'SPACE',sh:'SPACE',code:32,wide:6,cls:'key'}]
-];
-
-/* ---------- 2.  Build the keyboard --------------------------------- */
-const kb = document.getElementById('keyboard');
-
-rows.forEach(row => {
-    row.forEach(k => {
-        const btn = document.createElement('div');
-        btn.className = k.cls ? k.cls : 'key';
-        btn.dataset.code = k.code;
-        btn.dataset.norm = k.norm;
-        btn.dataset.shift = k.sh;
-        btn.textContent = k.norm;
-        if (k.wide) btn.style.gridColumn = `span ${k.wide}`;
-        btn.addEventListener('click', () => onKeyPress(btn));
-        kb.appendChild(btn);
-    });
-});
-
-/* ---------- 3.  Shift handling ------------------------------------- */
-let shiftActive = false;
-
-function toggleShift() {
-    shiftActive = !shiftActive;
-    refreshShift();
-}
-
-/* change the visual label according to the current shift state */
-function refreshShift() {
-    const keys = document.querySelectorAll('#keyboard .key');
-    keys.forEach(k => {
-        const norm = k.dataset.norm;
-        const sh   = k.dataset.shift;
-        // Keep special keys (SHIFT, SPACE, ENTER, BACKSPACE) unchanged
-        if (['SHIFT','SPACE','←','⏎'].includes(norm)) return;
-        k.textContent = shiftActive ? sh : norm;
-    });
-}
-
-/* ---------- 4.  Send a key to the emulator ------------------------ */
-function sendKey(code) {
-    if (ci) ci.simulateKeyPress(code);
-}
-
-/* ---------- 5.  Click handler -------------------------------------- */
-function onKeyPress(btn) {
-    const code = Number(btn.dataset.code);
-    const label = btn.textContent;
-
-    if (code === 16) {                 // Shift key
-        toggleShift();
-        return;
-    }
-
-    // Normal character – send it
-    sendKey(code);
-
-    // If we were in shift mode, turn it off after the key press
-    if (shiftActive && code !== 16) {
-        shiftActive = false;
-        refreshShift();
-    }
-}
-
-/* ---------- 6.  JS‑DOS setup -------------------------------------- */
-let ci = null;               // client instance
-const dosRoot = document.getElementById('dos-root');
+const dosRoot = document.getElementById("dos-root");
+let ci = null;
+let shiftState = false;
+let shiftTriggered = false;
 
 Dos(dosRoot, {
-    wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
+ wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js"
 }).ready((fs, main) => {
-    fs.extract("basic.zip").then(() => {
-        main([
-            "-c", "mount d .",
-            "-c", "d:",
-            "-c", "cd gwbasic",
-            "-c", "gwbasic"
-        ]).then(client => {
-            ci = client;
-            dosRoot.focus();               // give the canvas initial focus
-        });
-    });
+ fs.extract("basic.zip").then(() => {
+ main([
+ "-c", "mount d .",
+ "-c", "d:",
+ "-c", "cd gwbasic",
+ "-c", "gwbasic"
+ ]).then((client) => {
+ ci = client;
+ });
+ });
+ });
+
+function toggleShift() {
+ if (!shiftState) {
+ shiftState = true;
+ document.getElementById('shift-text').innerText = 'SHIFT ON';
+ } else {
+ shiftState = false;
+ document.getElementById('shift-text').innerText = 'SHIFT OFF';
+ }
+}
+function sendKeys(keyCode) {
+ if (!ci) return;
+ ci.simulateKeyPress(keyCode);
+}
+document.getElementById("keyboard-container").addEventListener("click", () => {
+ dosRoot.focus();
 });
-
-/* ---------- 7.  Keep focus when user taps canvas ----------------- */
-dosRoot.addEventListener('click', () => dosRoot.focus());
-
 </script>
 </body>
 </html>
